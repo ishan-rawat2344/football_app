@@ -1,0 +1,22 @@
+# dependencies and build output
+node_modules/
+dist/
+dev-dist/
+coverage/
+
+# secrets: never commit API keys
+.env
+.env.*
+!.env.example
+
+# your personal profile and health data: stays on your machine and phone only
+private/
+
+# local Claude Code settings (launch.json is shared and stays in git)
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/
+.idea/

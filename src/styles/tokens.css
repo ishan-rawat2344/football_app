@@ -1,0 +1,115 @@
+/*
+ * Design tokens. Every colour in the app comes from here.
+ * Palette: PSG-inspired deep navy and red; neutrals tinted slightly blue.
+ * Light is the default. Dark follows the phone's setting unless the user
+ * forces a theme in Settings (html[data-theme]).
+ */
+:root {
+  color-scheme: light;
+
+  --navy-900: #060c1a;
+  --navy-800: #0a1f44;
+  --navy-700: #12306a;
+  --red-600: #d7262b;
+  --red-500: #e6393e;
+
+  --bg: #f3f5fa;
+  --surface: #ffffff;
+  --surface-2: #e9edf6;
+  --border: #d6dcea;
+  --text: #0b1530;
+  --text-muted: #56627e;
+
+  --primary: #0a1f44;
+  --on-primary: #ffffff;
+  --accent: #d7262b;
+  --on-accent: #ffffff;
+
+  --success: #12805c;
+  --warning: #b86e00;
+  --danger: #c4282d;
+  --success-bg: #e3f4ec;
+  --warning-bg: #fdf0db;
+  --danger-bg: #fbe4e4;
+
+  --tab-bg: rgba(255, 255, 255, 0.92);
+  --shadow: 0 1px 2px rgba(10, 31, 68, 0.06), 0 4px 16px rgba(10, 31, 68, 0.06);
+
+  /* Type: system fonts only, so nothing has to download and it works offline. */
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-md: 1.0625rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.625rem;
+  --fs-2xl: 2.25rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-pill: 999px;
+
+  --tap: 48px; /* minimum touch target */
+  --tabbar-h: 64px;
+  --header-h: 52px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #060c1a;
+    --surface: #0f1a33;
+    --surface-2: #17244a;
+    --border: #22325c;
+    --text: #eaf0ff;
+    --text-muted: #93a0bf;
+
+    --primary: #4f86e8;
+    --on-primary: #06102a;
+    --accent: #ff4b47;
+    --on-accent: #ffffff;
+
+    --success: #3ccf95;
+    --warning: #f2b14a;
+    --danger: #ff6b66;
+    --success-bg: #0f2e26;
+    --warning-bg: #33260e;
+    --danger-bg: #3a1517;
+
+    --tab-bg: rgba(10, 18, 38, 0.92);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #060c1a;
+  --surface: #0f1a33;
+  --surface-2: #17244a;
+  --border: #22325c;
+  --text: #eaf0ff;
+  --text-muted: #93a0bf;
+
+  --primary: #4f86e8;
+  --on-primary: #06102a;
+  --accent: #ff4b47;
+  --on-accent: #ffffff;
+
+  --success: #3ccf95;
+  --warning: #f2b14a;
+  --danger: #ff6b66;
+  --success-bg: #0f2e26;
+  --warning-bg: #33260e;
+  --danger-bg: #3a1517;
+
+  --tab-bg: rgba(10, 18, 38, 0.92);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
