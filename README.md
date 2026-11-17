@@ -4,9 +4,9 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status:** Milestones 0–2 are done: the offline app shell; your profile, skill ratings, and backup
-> and restore; and a library of 54 coach-written drills sorted around your weaknesses. See
-> [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
+> **Status:** Milestones 0–3 are done: the offline app shell; your profile, skill ratings, and backup
+> and restore; a library of 54 coach-written drills; and a rolling training plan built around your games.
+> See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
 
 ---
 
@@ -158,6 +158,18 @@ Your data is stored separately and isn't touched by either.
 
 ---
 
+## How the plan decides each day
+
+The full rules are in [docs/PLAN.md](docs/PLAN.md). In short, in order:
+1. A game is a game. The day **before** a game is a short, light "sharp" session; the day **after** is recovery.
+2. A **hard ground session** happens only when yesterday wasn't hard and you still need one this week.
+   Before a hard session the app asks "Signed up for a game tomorrow?".
+3. At least one rest day a week; otherwise home sessions until the weekly target is met.
+4. Every 4th week is lighter. Your health notes pull out or soften drills that load a sore area.
+
+Tap **Game today / Game tomorrow** on Today (or "Game this day" on Plan) and everything re-plans. Use the
+swap chips ("Can't get to the ground", "Rest") to change a day; "Back to the plan" undoes it.
+
 ## Adding or editing a drill
 
 Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
@@ -179,6 +191,8 @@ src/
   profile/            profile labels and defaults (meta.ts), clean-up of imported data (normalize.ts)
   drills/             the drill library: content/ (one file per area), types, labels,
                       personal.ts (priority sort and health warnings), drills.test.ts (content checks)
+  plan/               the rolling plan: engine.ts (which kind of day), sessions.ts (which drills),
+                      usePlan.ts (live data), actions.ts (games, swaps, logging), engine.test.ts
   hooks/              live data hooks (useProfile, useRatingHistory, useSetting)
   lib/                small helpers: dates, formatting, theme, storage
   styles/             tokens.css (colours, sizes, light/dark) and app.css

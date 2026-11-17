@@ -185,3 +185,12 @@ describe('health warnings', () => {
     for (const areas of Object.values(LOAD_TAG_AREAS)) expect(areas.length).toBeGreaterThan(0);
   });
 });
+
+describe('describeAreas', () => {
+  it('reads naturally', async () => {
+    const { describeAreas } = await import('./personal');
+    expect(describeAreas(['groinLeft', 'groinRight'])).toBe('groin (both sides)');
+    expect(describeAreas(['ankleRight'])).toBe('right ankle');
+    expect(describeAreas(['ankleRight', 'kneeLeft'])).toBe('right ankle and left knee');
+  });
+});

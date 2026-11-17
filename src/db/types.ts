@@ -189,17 +189,32 @@ export type SessionType =
   | 'rest'
   | 'game';
 
+/** What you asked for on a day, instead of the automatic choice. */
+export type DayOverride = 'ground' | 'groundTech' | 'home' | 'rest';
+
+/**
+ * Stored only when you change a day by hand ("can't get to the ground").
+ * Every other day is worked out fresh by the plan engine (src/plan).
+ */
 export interface PlannedSession {
-  id: string; // e.g. "2026-11-18"
+  id: string; // the date, e.g. "2026-11-18"
   date: ISODate;
   type: SessionType;
   blocks: unknown[];
   reasons: string[];
+  source?: 'user';
+  override?: DayOverride;
 }
 
+/**
+ * planned  = you've signed up
+ * played   = it happened
+ * cancelled = was on, then called off
+ * none     = you've confirmed there is no game that day
+ */
 export interface Game {
   date: ISODate;
-  status: 'planned' | 'played' | 'cancelled';
+  status: 'planned' | 'played' | 'cancelled' | 'none';
 }
 
 export interface SessionLog {
@@ -207,6 +222,8 @@ export interface SessionLog {
   date: ISODate;
   plannedSessionId?: string;
   status: 'done' | 'partial' | 'skipped';
+  /** What kind of day it was, so weekly targets can count it. */
+  sessionType?: SessionType;
   rpe?: number; // 1–10
   minutes?: number;
   notes?: string;

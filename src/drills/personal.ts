@@ -23,6 +23,25 @@ export function weakSkillsHit(drill: Drill, ratings: Ratings) {
   return drill.skills.filter((s) => (ratings[s] ?? 10) <= WEAK_AT);
 }
 
+/** "groin (both sides)", "right ankle", "right ankle and left knee". */
+export function describeAreas(areas: HealthFlag['areas']): string {
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const a of areas) {
+    if (seen.has(a)) continue;
+    const m = /^(.*)(Left|Right)$/.exec(a);
+    const pair = m ? (m[2] === 'Left' ? `${m[1]}Right` : `${m[1]}Left`) : null;
+    if (m && pair && areas.includes(pair as HealthFlag['areas'][number])) {
+      seen.add(a).add(pair);
+      parts.push(`${BODY_AREA_LABEL[a].replace(/^(Left|Right) /, '').toLowerCase()} (both sides)`);
+    } else {
+      seen.add(a);
+      parts.push(BODY_AREA_LABEL[a].toLowerCase());
+    }
+  }
+  return parts.join(' and ');
+}
+
 export interface HealthWarning {
   flag: HealthFlag;
   tags: LoadTag[];
@@ -39,7 +58,7 @@ export function healthWarnings(drill: Drill, flags: HealthFlag[]): HealthWarning
     const tags = drill.loadTags.filter((t) => LOAD_TAG_AREAS[t].some((a) => flag.areas.includes(a)));
     if (!tags.length) continue;
 
-    const areas = flag.areas.map((a) => BODY_AREA_LABEL[a].toLowerCase()).join(' and ');
+    const areas = describeAreas(flag.areas);
     const loads = tags.map((t) => LOAD_TAG_LABEL[t]).join(', ');
     // Light drills (e.g. the adductor squeeze, which is itself groin rehab)
     // are a caution even for an active note; only harder work says "go easy".
@@ -52,6 +71,7 @@ export function healthWarnings(drill: Drill, flags: HealthFlag[]): HealthWarning
           : `You're keeping an eye on "${flag.title}". This drill involves ${loads}. Fine to do, but stop and note it if your ${areas} reaches ${flag.amberAt}/10.`;
     out.push({ flag, tags, message, level });
   }
-  // Most serious first.
-  return out.sort((a, b) => (a.level === b.level ? 0 : a.level === 'stop' ? -1 : 1));
+  // Most serious first: "go easy" before "watch", active notes before monitored ones.
+  const rank = (w: HealthWarning) => (w.level === 'stop' ? 0 : 2) + (w.flag.status === 'active' ? 0 : 1);
+  return out.sort((a, b) => rank(a) - rank(b));
 }

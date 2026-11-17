@@ -1,34 +1,21 @@
+import { useState } from 'react';
 import { Link } from 'wouter';
-import type { HealthFlag, Ratings } from '../db/types';
-import { DRILLS } from '../drills/library';
-import { CATEGORY_LABEL } from '../drills/meta';
-import { healthWarnings, priorityScore } from '../drills/personal';
+import { KindBadge, SWAP_LABEL, SessionView } from '../components/SessionView';
+import { toast } from '../components/Toast';
+import type { HealthFlag, SessionType } from '../db/types';
 import { useProfile, useRatingHistory, useSetting } from '../hooks/useData';
-import { daysBetween, formatShort, todayISO } from '../lib/dates';
+import { addDays, daysBetween, formatShort } from '../lib/dates';
 import { daysSince, timeAgo } from '../lib/format';
+import { clearLog, logDay, logPastDay, setGame, setOverride } from '../plan/actions';
+import type { DayPlan } from '../plan/types';
+import { usePlan, useToday } from '../plan/usePlan';
 import { BODY_AREA_LABEL } from '../profile/meta';
 import { NoProfile } from './profile/NoProfile';
 import { RERATE_AFTER_DAYS, daysSinceLastRating } from './Ratings';
 
 const BACKUP_EVERY_DAYS = 7;
 
-/**
- * Until the plan engine (M3): the three drills that hit your weakest skills,
- * one per category, skipping any your health notes say to go easy on.
- */
-function topDrills(ratings: Ratings, flags: HealthFlag[]) {
-  const seen = new Set<string>();
-  return DRILLS.filter((d) => d.category !== 'warmup' && d.category !== 'cooldown')
-    .filter((d) => !healthWarnings(d, flags).some((w) => w.level === 'stop'))
-    .map((d, i) => ({ d, i, score: priorityScore(d, ratings) }))
-    .sort((a, b) => b.score - a.score || a.i - b.i)
-    .filter(({ d }) => (seen.has(d.category) ? false : (seen.add(d.category), true)))
-    .slice(0, 3)
-    .map((x) => x.d);
-}
-
 const ROADMAP = [
-  { label: 'Your rolling training plan', milestone: 'M3' },
   { label: 'Session mode for the pitch', milestone: 'M4' },
   { label: 'Match log and weekly focus', milestone: 'M5' },
   { label: 'Tests, charts and personal bests', milestone: 'M6' },
@@ -42,10 +29,9 @@ function greeting(now = new Date()) {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-function HealthCard({ flags }: { flags: HealthFlag[] }) {
+function HealthCard({ flags, today }: { flags: HealthFlag[]; today: string }) {
   const watch = flags.filter((f) => f.status !== 'resolved');
   if (!watch.length) return null;
-  const today = todayISO();
   return (
     <section className="card">
       <p className="card__eyebrow">Look after</p>
@@ -75,74 +61,233 @@ function HealthCard({ flags }: { flags: HealthFlag[] }) {
   );
 }
 
+const IN_A_SENTENCE: Partial<Record<SessionType, string>> = {
+  groundHard: 'hard ground session',
+  groundTech: 'technical ground session',
+  home: 'home session',
+  sharp: 'sharp session',
+  recovery: 'recovery session',
+};
+
+/** "Did you do yesterday's session?" — keeps the weekly targets honest. */
+function YesterdayCheck({ date, kind }: { date: string; kind: SessionType }) {
+  const what = IN_A_SENTENCE[kind];
+  if (!what) return null;
+  return (
+    <section className="card">
+      <p className="card__eyebrow">Yesterday</p>
+      <h2 className="card__title">Did you do your {what}?</h2>
+      <p className="card__body" style={{ marginBottom: 16 }}>
+        The plan counts it towards this week's targets and avoids two hard days in a row.
+      </p>
+      <div className="row">
+        <button className="btn btn--secondary" onClick={() => void logPastDay(date, null)}>
+          No
+        </button>
+        <button className="btn btn--primary" onClick={() => void logPastDay(date, kind)}>
+          Yes, done
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function TodaySession({ day }: { day: DayPlan }) {
+  const [busy, setBusy] = useState(false);
+  const tomorrow = addDays(day.date, 1);
+  const done = day.logged === 'done' || day.logged === 'partial';
+
+  async function run(fn: () => Promise<void>, message?: string) {
+    setBusy(true);
+    try {
+      await fn();
+      if (message) toast(message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className={`card card--session ${day.kind === 'game' ? 'card--session-game' : ''}`}>
+      <div className="card__head">
+        <p className="card__eyebrow" style={{ margin: 0 }}>
+          Today{day.lightWeek ? ' · light week' : ''}
+        </p>
+        <KindBadge day={day} />
+      </div>
+      <h2 className="session-title">
+        {day.title}
+        {day.minutes > 0 && <span className="session-title__min"> · {day.minutes} min</span>}
+      </h2>
+      <p className="session-reason">{day.reasons[0]}</p>
+      {day.reasons.slice(1).map((r) => (
+        <p key={r} className="session-reason session-reason--extra">
+          {r}
+        </p>
+      ))}
+
+      {day.askGameTomorrow && !done && (
+        <div className="ask">
+          <p className="ask__q">Signed up for a game tomorrow?</p>
+          <p className="ask__hint">If yes, today becomes a short, sharp session instead.</p>
+          <div className="row">
+            <button className="btn btn--secondary" disabled={busy} onClick={() => run(() => setGame(tomorrow, 'none'))}>
+              No
+            </button>
+            <button
+              className="btn btn--primary"
+              disabled={busy}
+              onClick={() => run(() => setGame(tomorrow, 'planned'), 'Game tomorrow: plan updated')}
+            >
+              Yes
+            </button>
+          </div>
+        </div>
+      )}
+
+      <SessionView blocks={day.blocks} />
+
+      {day.kind === 'rest' && (
+        <p className="card__body" style={{ marginTop: 8 }}>
+          Nothing to do. A walk is fine. Sleep well.
+        </p>
+      )}
+
+      {day.kind !== 'rest' && day.kind !== 'game' && day.kind !== 'missed' && (
+        <div style={{ marginTop: 16 }}>
+          {done ? (
+            <div className="done-row">
+              <span className="status status--ok">✓ Done</span>
+              <button className="btn btn--ghost btn--small" disabled={busy} onClick={() => run(() => clearLog(day.date))}>
+                Undo
+              </button>
+            </div>
+          ) : day.logged === 'skipped' ? (
+            <div className="done-row">
+              <span className="status status--warn">Skipped</span>
+              <button className="btn btn--ghost btn--small" disabled={busy} onClick={() => run(() => clearLog(day.date))}>
+                Undo
+              </button>
+            </div>
+          ) : (
+            <div className="row" style={{ gridTemplateColumns: '1fr 2fr' }}>
+              <button className="btn btn--secondary" disabled={busy} onClick={() => run(() => logDay(day, 'skipped'), 'Logged as skipped')}>
+                Skip
+              </button>
+              <button className="btn btn--primary" disabled={busy} onClick={() => run(() => logDay(day, 'done'), 'Nice. Session logged')}>
+                Mark done
+              </button>
+            </div>
+          )}
+          <p className="field__hint" style={{ marginTop: 8 }}>
+            Session mode with timers, effort and pain check-ins arrives in M4.
+          </p>
+        </div>
+      )}
+
+      {day.kind === 'game' && (
+        <div className="row" style={{ marginTop: 16 }}>
+          <button className="btn btn--secondary" disabled={busy} onClick={() => run(() => setGame(day.date, 'cancelled'), 'Game removed: plan updated')}>
+            Game cancelled
+          </button>
+        </div>
+      )}
+
+      {!done && (day.options.length > 0 || day.override) && (
+        <div className="swaps">
+          <p className="swaps__label">Change today</p>
+          <div className="chips">
+            {day.override && (
+              <button className="chip" onClick={() => run(() => setOverride(day.date, null), 'Back to the plan')}>
+                Back to the plan
+              </button>
+            )}
+            {day.options.map((o) => (
+              <button key={o} className="chip" onClick={() => run(() => setOverride(day.date, o), 'Plan updated')}>
+                {o === 'home' && (day.kind === 'groundHard' || day.kind === 'groundTech')
+                  ? "Can't get to the ground"
+                  : o === 'groundTech' && day.kind === 'recovery'
+                    ? 'Feeling fresh: technical ground session'
+                    : SWAP_LABEL[o]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function GamesCard({ today, days }: { today: string; days: DayPlan[] }) {
+  const tomorrow = addDays(today, 1);
+  const todayIsGame = days[0]?.kind === 'game';
+  const tomorrowIsGame = days[1]?.kind === 'game';
+  const next = days.find((d) => d.kind === 'game');
+  return (
+    <section className="card">
+      <p className="card__eyebrow">Games</p>
+      <p className="card__body" style={{ marginBottom: 12 }}>
+        {next
+          ? `Next game: ${next.date === today ? 'today' : next.date === tomorrow ? 'tomorrow' : formatShort(next.date)}.`
+          : 'No games in the plan. Tap as soon as you sign up, and the week re-plans around it.'}
+      </p>
+      <div className="row">
+        <button
+          className={`btn ${todayIsGame ? 'btn--toggle-on' : 'btn--secondary'}`}
+          aria-pressed={todayIsGame}
+          onClick={() => void setGame(today, todayIsGame ? null : 'planned')}
+        >
+          {todayIsGame ? '✓ Game today' : 'Game today'}
+        </button>
+        <button
+          className={`btn ${tomorrowIsGame ? 'btn--toggle-on' : 'btn--secondary'}`}
+          aria-pressed={tomorrowIsGame}
+          onClick={() => void setGame(tomorrow, tomorrowIsGame ? null : 'planned')}
+        >
+          {tomorrowIsGame ? '✓ Game tomorrow' : 'Game tomorrow'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function Today() {
+  const today = useToday();
   const profile = useProfile();
   const history = useRatingHistory();
   const lastBackupAt = useSetting<string>('lastBackupAt');
+  const plan = usePlan();
 
-  if (profile === 'loading' || history === 'loading' || lastBackupAt === 'loading') return null;
+  if (profile === 'loading' || history === 'loading' || lastBackupAt === 'loading' || plan === 'loading') return null;
 
   const sinceRating = daysSinceLastRating(history);
   const sinceBackup = daysSince(lastBackupAt);
   const needsBackup = profile !== null && (sinceBackup === null || sinceBackup >= BACKUP_EVERY_DAYS);
   const needsRating = profile !== null && (sinceRating === null || sinceRating >= RERATE_AFTER_DAYS);
+  const day = plan?.days[0];
 
   return (
     <>
       <p className="card__eyebrow" style={{ marginTop: 8 }}>
-        {formatShort(todayISO())}
+        {formatShort(today)}
       </p>
       <h1 className="page-title">
         {profile ? `${greeting()}${profile.name ? `, ${profile.name}` : ''}` : 'Today'}
       </h1>
-      <p className="page-lede">
-        {profile
-          ? 'Your daily session lands here from M3. For now, your coach knows who you are.'
-          : 'Your session for the day will show here.'}
-      </p>
+      {!profile && <p className="page-lede">Your session for the day will show here.</p>}
 
-      <div className="stack">
+      <div className="stack" style={{ marginTop: profile ? 12 : 0 }}>
         {!profile && <NoProfile />}
 
-        {profile && profile.goals.weeks4.length > 0 && (
-          <section className="card card--hero">
-            <p className="card__eyebrow">Your next 4 weeks</p>
-            <ul className="bullets bullets--hero">
-              {profile.goals.weeks4.map((g) => (
-                <li key={g}>{g}</li>
-              ))}
-            </ul>
-          </section>
+        {plan && plan.yesterday && plan.yesterdayPlanned && (
+          <YesterdayCheck date={plan.yesterday.date} kind={plan.yesterdayPlanned as SessionType} />
         )}
 
-        {profile && history.length > 0 && (
-          <section className="card">
-            <p className="card__eyebrow">Start here</p>
-            <p className="card__body" style={{ marginBottom: 8 }}>
-              The drills that hit your weakest skills. Your full plan arrives in M3.
-            </p>
-            <ul className="list">
-              {topDrills(history.at(-1)?.ratings ?? {}, profile.health).map((d) => (
-                <li key={d.id}>
-                  <Link href={`/drills/${d.id}`} className="list-link">
-                    <span>
-                      <strong>{d.name}</strong>
-                      <br />
-                      <span className="muted">
-                        {CATEGORY_LABEL[d.category]} · {d.durationMin} min
-                      </span>
-                    </span>
-                    <span className="chevron" aria-hidden="true">
-                      ›
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {day && <TodaySession day={day} />}
 
-        {profile && <HealthCard flags={profile.health} />}
+        {plan && <GamesCard today={today} days={plan.days} />}
+
+        {profile && <HealthCard flags={profile.health} today={today} />}
 
         {needsRating && (
           <section className="card">
@@ -173,6 +318,17 @@ export function Today() {
             <Link href="/data" className="btn btn--secondary btn--block">
               Back up
             </Link>
+          </section>
+        )}
+
+        {profile && profile.goals.weeks4.length > 0 && (
+          <section className="card">
+            <p className="card__eyebrow">Your next 4 weeks</p>
+            <ul className="bullets">
+              {profile.goals.weeks4.map((g) => (
+                <li key={g}>{g}</li>
+              ))}
+            </ul>
           </section>
         )}
 
