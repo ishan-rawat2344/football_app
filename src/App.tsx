@@ -10,6 +10,7 @@ import { DrillDetail } from './screens/DrillDetail';
 import { SessionMode } from './screens/session/SessionMode';
 import { Drills } from './screens/Drills';
 import { MatchForm } from './screens/MatchForm';
+import { TestScreen } from './screens/TestScreen';
 import { Mind } from './screens/Mind';
 import { Plan } from './screens/Plan';
 import { ProfileEdit } from './screens/profile/ProfileEdit';
@@ -93,6 +94,7 @@ function Shell() {
             <Route path="/data" component={DataScreen} />
             <Route path="/match/new/:date" component={MatchForm} />
             <Route path="/match/:id" component={MatchForm} />
+            <Route path="/tests/:id" component={TestScreen} />
             {import.meta.env.DEV && <Route path="/__crash" component={Crash} />}
             <Route>
               <h1 className="page-title">Not found</h1>

@@ -4,10 +4,10 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status:** Milestones 0–5 are done: the offline app shell; your profile, skill ratings, and backup
+> **Status:** Milestones 0–6 are done: the offline app shell; your profile, skill ratings, and backup
 > and restore; a library of 54 coach-written drills; a rolling training plan built around your games;
-> session mode for the pitch, which adapts the plan to your effort, ratings and pain; and a match log that
-> sets each week's focus.
+> session mode for the pitch, which adapts the plan to your effort, ratings and pain; a match log that
+> sets each week's focus; and solo tests with charts and personal bests.
 > See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
 
 ---
@@ -230,6 +230,38 @@ also count towards training load, using your minutes and effort.
 **Progress** shows your season numbers (✓ when you're meeting a per-game minimum), the last 3 games
 against the ones before, and every logged match.
 
+## Tests, charts and personal bests
+
+Nine solo tests, every 4 weeks (Progress → Tests):
+
+| Test | Where | Measure |
+|---|---|---|
+| 30 m sprint | Ground | seconds (your partner times it) |
+| Cone slalom with the ball | Ground | seconds (built-in stopwatch) |
+| Left-foot wall passes in 60 s | Terrace | passes (built-in countdown) |
+| Right-foot wall passes in 60 s | Terrace | passes (to compare with your left) |
+| Juggling record | Terrace | touches |
+| Crossing accuracy | Ground | out of 10 |
+| Cut-in finishing | Ground | out of 10 |
+| Single-leg balance, eyes closed | Room | seconds |
+| Front plank hold | Room | seconds |
+
+- **Each test page** has the setup, the steps, how to keep it fair (same distance and conditions each
+  time), a timer with beeps, quick result entry, a chart of every result with your PB marked, and the full
+  history as a list.
+- **Today** shows a **Test day** card when tests are due and today's session is in the right place
+  (ground tests on ground days, home tests on home days).
+- **Health:** tests that load an area you're protecting are left out of Today's card and blocked on their
+  test page, because a result taken while protecting an injury isn't a fair comparison.
+- **Progress** shows:
+  - every test with a sparkline that points up when you improve (even for times)
+  - your weak foot as a percentage of your strong foot
+  - personal bests (tests, best games, longest streak)
+  - game-by-game charts of 1v1s, left-foot actions and confidence against your targets (each on its own
+    chart, with a table view)
+  - 8 weeks of training load
+- **Chart colours** were checked with a colour validator so they pass in both light and dark mode.
+
 ## Adding or editing a drill
 
 Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
@@ -256,6 +288,8 @@ src/
   session/            session mode logic: run.ts (state machine), device.ts (wake lock, beeps,
                       speech), save.ts; screens in screens/session/
   focus/              weekly focus from match logs (focus.ts, focus.test.ts)
+  tests/              the 9 solo tests (defs.ts) and PBs, trends, due dates, weekly load (results.ts)
+  components/charts   hand-written SVG line, bar and sparkline charts
   hooks/              live data hooks (useProfile, useRatingHistory, useSetting)
   lib/                small helpers: dates, formatting, theme, storage
   styles/             tokens.css (colours, sizes, light/dark) and app.css

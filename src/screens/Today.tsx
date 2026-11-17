@@ -10,6 +10,9 @@ import { describeAreas } from '../drills/personal';
 import { describeRestriction, type AreaRestriction } from '../plan/adapt';
 import type { RunState } from '../session/run';
 import { logPain } from '../session/save';
+import type { TestResult } from '../db/types';
+import { dueTests } from '../tests/results';
+import { LOAD_TAG_AREAS } from '../drills/types';
 import { useProfile, useRatingHistory, useSetting } from '../hooks/useData';
 import { addDays, daysBetween, formatShort } from '../lib/dates';
 import { daysSince, timeAgo } from '../lib/format';
@@ -26,7 +29,6 @@ const BACKUP_EVERY_DAYS = 7;
 const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 const ROADMAP = [
-  { label: 'Tests, charts and personal bests', milestone: 'M6' },
   { label: 'Mentality coach', milestone: 'M7' },
   { label: 'YouTube tutorials', milestone: 'M8' },
   { label: 'Ask Claude', milestone: 'M9' },
@@ -319,6 +321,45 @@ function LogMatchPrompt({ today, games, matches }: { today: string; games: Game[
   );
 }
 
+/** Tests due, matched to where today's session happens. */
+function TestDayCard({ day, results, today }: { day: DayPlan; results: TestResult[]; today: string }) {
+  const atGround = day.kind === 'groundHard' || day.kind === 'groundTech';
+  const atHome = day.kind === 'home';
+  if (!atGround && !atHome) return null;
+  const due = dueTests(results, today).filter((d) =>
+    atGround ? d.test.where === 'ground' : d.test.where === 'terrace' || d.test.where === 'room',
+  );
+  // Sprinting only on a hard ground day; nothing that loads an area you're protecting.
+  const protectedAreas = new Set(day.restrictions.map((r) => r.area));
+  const fit = due
+    .filter((d) => d.test.id !== 'sprint-30' || day.kind === 'groundHard')
+    .filter((d) => !d.test.loadTags.some((t) => LOAD_TAG_AREAS[t].some((a) => protectedAreas.has(a))));
+  if (!fit.length) return null;
+  const baseline = results.length === 0;
+  return (
+    <section className="card">
+      <p className="card__eyebrow">{baseline ? 'Baseline tests' : 'Test day'}</p>
+      <p className="card__body" style={{ marginBottom: 8 }}>
+        {baseline
+          ? 'Do these after your warm-up today to set your starting numbers.'
+          : 'Due again (every 4 weeks). Do them after your warm-up.'}
+      </p>
+      <ul className="list">
+        {fit.map((d) => (
+          <li key={d.test.id}>
+            <Link href={`/tests/${d.test.id}`} className="list-link">
+              <span>{d.test.name}</span>
+              <span className="chevron" aria-hidden="true">
+                ›
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function StreakPill({ streak }: { streak: Streak }) {
   if (!streak.current && !streak.best) return null;
   return (
@@ -369,6 +410,7 @@ export function Today() {
   const lastBackupAt = useSetting<string>('lastBackupAt');
   const plan = usePlan();
   const activeRun = useLiveQuery(async () => ((await db.settings.get('activeRun'))?.value as RunState | undefined) ?? null, [], null);
+  const testResults = useLiveQuery(() => db.testResults.toArray(), [], [] as TestResult[]);
 
   if (profile === 'loading' || history === 'loading' || lastBackupAt === 'loading' || plan === 'loading') return null;
 
@@ -403,6 +445,8 @@ export function Today() {
         {plan && <LogMatchPrompt today={today} games={plan.input.games} matches={plan.input.matches ?? []} />}
 
         {day && <TodaySession day={day} activeRun={activeRun} />}
+
+        {day && !day.logged && <TestDayCard day={day} results={testResults} today={today} />}
 
         {plan && <FocusCard focus={plan.focus} ratings={plan.input.ratings} />}
 
