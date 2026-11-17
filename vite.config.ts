@@ -10,6 +10,11 @@ const base = process.env.BASE_PATH ?? '/';
 
 export default defineConfig({
   base,
+  server: {
+    // `npm run dev:phone` exposes the dev server on your Wi-Fi. Never serve
+    // the private profile (or env files) to anyone on the network.
+    fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/private/**'] },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },

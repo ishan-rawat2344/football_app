@@ -4,8 +4,8 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status:** Milestone 0 is done: the app shell, offline support and an on-device database.
-> See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
+> **Status:** Milestones 0–1 are done: the offline app shell, plus your profile, skill ratings,
+> and backup and restore. See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
 
 ---
 
@@ -54,6 +54,8 @@ your iPhone.
 
 > This is good for checking layouts. **Offline mode and "Add to Home Screen" only work properly on the real
 > HTTPS site** (step 5), because browsers only allow service workers on HTTPS.
+>
+> The dev server refuses to serve `private/` and `.env*`, so nobody else on the Wi-Fi can read them.
 
 ## 4. Tests and checks
 
@@ -112,6 +114,34 @@ From now on, every `git push` to `main` tests, builds and deploys automatically.
 5. Test offline: turn on **Airplane Mode**, close the app fully (swipe it away), then open it again. It
    should still load.
 
+## 7. Put your profile on the phone
+
+Your interview profile is in `private/profile.json` on your Mac. It's git-ignored, so it never goes to
+GitHub. To get it onto your iPhone:
+
+1. **On the Mac:** in Finder, open the project's `private` folder. Right-click `profile.json` →
+   **Share** → **AirDrop** → your iPhone. On the iPhone it lands in **Files → Downloads**.
+   (Saving it to iCloud Drive works too.)
+2. **On the iPhone:** open Touchline → tap the settings icon → **Back up, restore or import** →
+   **Choose file** → **Browse** → **Downloads** → `profile.json`.
+3. Check the preview, then tap **Import profile**.
+4. Go to Settings → **Profile** → **Basics** → **Edit** and add your name.
+5. Optional: delete `profile.json` from Downloads afterwards. The app keeps its own copy.
+
+Importing a profile again replaces the profile but keeps your logs and rating history.
+
+## 8. Backups
+
+Everything lives only on your phone. If the phone is lost or the app is deleted, a backup is the only
+copy.
+
+- **Back up:** Settings → **Back up, restore or import** → **Back up now** → **Save to Files**
+  (choose iCloud Drive) or AirDrop it to your Mac. Today reminds you if your last backup is over a week old.
+- **Restore** (new phone, or after deleting the app): same screen → **Choose file** → pick the backup →
+  check what's in it → **Restore**. This replaces everything on the phone.
+- Backups never contain API keys, and they leave out cached YouTube data (YouTube's rules say it has to be
+  refreshed, so it's re-downloaded instead).
+
 ### Updates
 
 When a new version is pushed, the app shows **"A new version is ready"** with **Later** or **Update**. It
@@ -134,9 +164,13 @@ src/
   main.tsx            entry point: theme, error boundary, persistent storage
   App.tsx             header, routes (hash-based: #/plan), tab bar
   screens/            one file per screen (Today, Plan, Drills, Progress, Mind, Settings)
-  components/         shared UI: TabBar, Icons, UpdateBanner, SystemCheck, ErrorBoundary
+  screens/profile/    profile overview and the section editors
+  components/         shared UI: TabBar, Icons, forms, Toast, UpdateBanner, SystemCheck, ErrorBoundary
   db/                 Dexie (IndexedDB) database: schema in db.ts, record shapes in types.ts
-  lib/                small helpers: dates, theme, storage
+  data/               import, backup and restore (importExport.ts is pure and unit-tested)
+  profile/            profile labels and defaults (meta.ts), clean-up of imported data (normalize.ts)
+  hooks/              live data hooks (useProfile, useRatingHistory, useSetting)
+  lib/                small helpers: dates, formatting, theme, storage
   styles/             tokens.css (colours, sizes, light/dark) and app.css
 public/               favicon and app icons (copied as-is into the build)
 scripts/make_icons.py redraws the PNG icons (needs Python + Pillow)

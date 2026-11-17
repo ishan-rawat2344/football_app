@@ -37,18 +37,147 @@ export type BodyArea =
   | 'lowerBack'
   | 'other';
 
-/** Single row (id "me"). Filled in M1 from your private profile file. */
+export type Foot = 'right' | 'left' | 'both';
+export type Position = 'LW' | 'LM' | 'RW' | 'RM' | 'ST' | 'CAM' | 'CM' | 'LB' | 'RB';
+export type EquipmentKey =
+  | 'ball'
+  | 'cones'
+  | 'miniGoal'
+  | 'rebounder'
+  | 'agilityLadder'
+  | 'resistanceBand'
+  | 'miniBands'
+  | 'hurdles'
+  | 'tapeMeasure'
+  | 'gym';
+export type TrainingWindow = 'earlyMorning' | 'morning' | 'afternoon' | 'evening';
+
+/**
+ * active   = hurting now; drives restrictions
+ * monitor  = cleared, but watch the pain threshold
+ * resolved = history only
+ */
+export type HealthStatus = 'active' | 'monitor' | 'resolved';
+
+export interface HealthFlag {
+  id: string;
+  title: string;
+  areas: BodyArea[];
+  status: HealthStatus;
+  /** Pain score (0–10) in these areas that turns the traffic light amber. */
+  amberAt: number;
+  since: string; // free text, e.g. "Jun 2026"
+  reviewBy?: ISODate;
+  notes: string;
+  /** What the coach should do about it, in plain words. */
+  rules: string;
+}
+
+export interface RoleModel {
+  name: string;
+  what: string;
+}
+
+export interface IfThenPlan {
+  id: string;
+  when: string;
+  then: string;
+}
+
+/** Single row (id "me"), imported from your private profile file in M1. */
 export interface Profile {
   id: 'me';
-  name?: string;
   updatedAt: string;
-  [field: string]: unknown;
+  name: string;
+  age: number | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  country: string;
+  dominantFoot: Foot;
+  positions: Position[];
+  game: {
+    level: string;
+    format: string;
+    surface: string;
+    teamShape: string;
+    matchMinutes: number | null;
+    minutesPlayed: number | null;
+  };
+  style: {
+    weapons: string[];
+    goalSources: string[];
+    goTo1v1: string;
+    goodGame: string;
+    badGame: string;
+    roleModels: RoleModel[];
+  };
+  goals: {
+    weeks4: string[];
+    months3: string[];
+    year1: string[];
+  };
+  /** Numbers the weekly focus (M5) checks your match logs against. */
+  matchTargets: {
+    dribbleAttemptsMin: number;
+    dribbleAttemptsTarget: number;
+    leftFootPassesMin: number;
+  };
+  schedule: {
+    gamesPerWeekMin: number;
+    gamesPerWeekMax: number;
+    gameStartTime: string; // "06:30"
+    gameNoticeDays: number;
+    groundSessionsPerWeek: number;
+    groundSessionsMax: number;
+    homeSessionsPerWeek: number;
+    trainingWindows: TrainingWindow[];
+  };
+  places: {
+    ground: string;
+    groundTravelMin: number | null;
+    groundHasGoals: boolean | null; // null = not checked yet
+    groundHasLights: boolean | null;
+    hasWall: boolean;
+    homeSpace: string;
+  };
+  equipment: EquipmentKey[];
+  partner: {
+    available: 'never' | 'occasional' | 'regular';
+    notes: string;
+  };
+  fitness: {
+    pushUps: number | null;
+    squats: number | null;
+    plankSec: number | null;
+    singleLegBalanceSec: number | null;
+    otherTraining: string;
+    warmUpHabit: string;
+  };
+  lifestyle: {
+    sleepBeforeGamesH: number | null;
+    sleepNormalH: number | null;
+    preGameFood: string;
+    dietNotes: string;
+  };
+  health: HealthFlag[];
+  mind: {
+    strengths: string[];
+    problemMoment: string;
+    afterMistake: string;
+    drivers: string;
+    cueWords: string[];
+    ifThen: IfThenPlan[];
+  };
+  prefs: {
+    videoLanguage: string;
+  };
 }
 
 export interface RatingSnapshot {
   id?: number;
   date: ISODate;
   ratings: Ratings;
+  note?: string;
 }
 
 export type SessionType =

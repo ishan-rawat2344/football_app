@@ -3,13 +3,21 @@ import { Link, Route, Router, Switch, useLocation } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { BrandMark, SettingsIcon } from './components/Icons';
 import { TabBar } from './components/TabBar';
+import { ToastHost } from './components/Toast';
 import { UpdateBanner } from './components/UpdateBanner';
+import { DataScreen } from './screens/DataScreen';
 import { Drills } from './screens/Drills';
 import { Mind } from './screens/Mind';
 import { Plan } from './screens/Plan';
+import { ProfileEdit } from './screens/profile/ProfileEdit';
+import { ProfileOverview } from './screens/profile/ProfileOverview';
 import { Progress } from './screens/Progress';
+import { Ratings } from './screens/Ratings';
 import { Settings } from './screens/Settings';
 import { Today } from './screens/Today';
+
+/** Screens reached from Settings: the settings icon stays highlighted on them. */
+const SETTINGS_AREA = ['/settings', '/profile', '/ratings', '/data'];
 
 /** Dev-only: open #/__crash to check the crash screen works. */
 function Crash(): never {
@@ -39,7 +47,9 @@ function Header() {
         href="/settings"
         className="icon-button"
         aria-label="Settings"
-        aria-current={location === '/settings' ? 'page' : undefined}
+        aria-current={
+          SETTINGS_AREA.some((p) => location === p || location.startsWith(p + '/')) ? 'page' : undefined
+        }
       >
         <SettingsIcon />
       </Link>
@@ -63,6 +73,10 @@ export function App() {
             <Route path="/progress" component={Progress} />
             <Route path="/mind" component={Mind} />
             <Route path="/settings" component={Settings} />
+            <Route path="/profile" component={ProfileOverview} />
+            <Route path="/profile/edit/:section" component={ProfileEdit} />
+            <Route path="/ratings" component={Ratings} />
+            <Route path="/data" component={DataScreen} />
             {import.meta.env.DEV && <Route path="/__crash" component={Crash} />}
             <Route>
               <h1 className="page-title">Not found</h1>
@@ -74,6 +88,7 @@ export function App() {
         </main>
         <TabBar />
         <UpdateBanner />
+        <ToastHost />
       </div>
     </Router>
   );
