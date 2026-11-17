@@ -4,10 +4,10 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status:** Milestones 0–6 are done: the offline app shell; your profile, skill ratings, and backup
+> **Status:** Milestones 0–7 are done: the offline app shell; your profile, skill ratings, and backup
 > and restore; a library of 54 coach-written drills; a rolling training plan built around your games;
 > session mode for the pitch, which adapts the plan to your effort, ratings and pain; a match log that
-> sets each week's focus; and solo tests with charts and personal bests.
+> sets each week's focus; solo tests with charts and personal bests; and a mentality coach.
 > See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
 
 ---
@@ -262,6 +262,34 @@ Nine solo tests, every 4 weeks (Progress → Tests):
   - 8 weeks of training load
 - **Chart colours** were checked with a colour validator so they pass in both light and dark mode.
 
+## Mentality coach (Mind tab)
+
+- **Pre-match routine.** The night before a game, Today shows **Tonight** with a checklist: kit, dinner,
+  your if → then plans, 3 minutes of visualisation, and a bedtime worked out from your kick-off time
+  (7½ hours before a wake-up an hour before kick-off). On game day it switches to **Game morning**: water,
+  a small snack 30–60 minutes before, the activation warm-up, three breaths and your cue words, and your
+  first action.
+- **Reset.** Four steps after a mistake: clap, breathe out, your reset word, then show for the ball within
+  5 seconds. **Practise it** runs the steps on a beat.
+- **Visualise.** A 3-minute, full-screen script: the first ball, the 1v1 and the moment after losing it. It
+  is built from your own cue words and if → then plans, and can read itself aloud.
+- **Lessons.** 10 short lessons on real winger moments:
+  - losing the ball
+  - the blank mind
+  - if → then plans
+  - the reset
+  - "what are they thinking of me?"
+  - body language
+  - demanding the ball
+  - criticism
+  - confidence
+  - nerves
+
+  Each one covers the situation, what's going on, three things to do, something to try this week, and the
+  idea it's based on. When your weekly focus is about confidence or going quiet, the matching lessons
+  appear at the top.
+- **Your words.** Your cue words and if → then plans, editable any time.
+
 ## Adding or editing a drill
 
 Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
@@ -288,6 +316,7 @@ src/
   session/            session mode logic: run.ts (state machine), device.ts (wake lock, beeps,
                       speech), save.ts; screens in screens/session/
   focus/              weekly focus from match logs (focus.ts, focus.test.ts)
+  mind/               lessons.ts, routine.ts (bedtime, checklists, reset word, visualisation script)
   tests/              the 9 solo tests (defs.ts) and PBs, trends, due dates, weekly load (results.ts)
   components/charts   hand-written SVG line, bar and sparkline charts
   hooks/              live data hooks (useProfile, useRatingHistory, useSetting)

@@ -29,7 +29,6 @@ const BACKUP_EVERY_DAYS = 7;
 const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 const ROADMAP = [
-  { label: 'Mentality coach', milestone: 'M7' },
   { label: 'YouTube tutorials', milestone: 'M8' },
   { label: 'Ask Claude', milestone: 'M9' },
 ];
@@ -360,6 +359,30 @@ function TestDayCard({ day, results, today }: { day: DayPlan; results: TestResul
   );
 }
 
+/** The night before a game, and game morning: open the pre-match routine. */
+function RoutineCard({ day, nextDate }: { day: DayPlan; nextDate?: string }) {
+  const morning = day.kind === 'game';
+  const evening = !morning && day.gameTomorrow;
+  const key = morning ? `routine:${day.date}:morning` : `routine:${nextDate}:evening`;
+  const done = useLiveQuery(async () => ((await db.settings.get(key))?.value as string[] | undefined)?.length ?? 0, [key], 0);
+  if (!morning && !evening) return null;
+  return (
+    <Link href="/mind/routine" className="card card--hero card--link">
+      <div>
+        <p className="card__eyebrow">{morning ? 'Game morning' : 'Tonight'}</p>
+        <h2 className="card__title">Pre-match routine</h2>
+        <p className="card__body">
+          {morning ? 'Water, a small snack, activation, cue words, first action.' : 'Kit, dinner, your plans, 3 minutes of visualisation, bedtime.'}
+          {done > 0 && ` ${done} of 5 done.`}
+        </p>
+      </div>
+      <span className="chevron" aria-hidden="true" style={{ color: '#fff' }}>
+        ›
+      </span>
+    </Link>
+  );
+}
+
 function StreakPill({ streak }: { streak: Streak }) {
   if (!streak.current && !streak.best) return null;
   return (
@@ -444,7 +467,11 @@ export function Today() {
 
         {plan && <LogMatchPrompt today={today} games={plan.input.games} matches={plan.input.matches ?? []} />}
 
+        {day && day.kind === 'game' && <RoutineCard day={day} />}
+
         {day && <TodaySession day={day} activeRun={activeRun} />}
+
+        {day && day.kind !== 'game' && <RoutineCard day={day} nextDate={plan?.days[1]?.date} />}
 
         {day && !day.logged && <TestDayCard day={day} results={testResults} today={today} />}
 

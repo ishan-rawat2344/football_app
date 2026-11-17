@@ -11,7 +11,11 @@ import { SessionMode } from './screens/session/SessionMode';
 import { Drills } from './screens/Drills';
 import { MatchForm } from './screens/MatchForm';
 import { TestScreen } from './screens/TestScreen';
-import { Mind } from './screens/Mind';
+import { LessonScreen } from './screens/mind/LessonScreen';
+import { Mind } from './screens/mind/Mind';
+import { ResetScreen } from './screens/mind/ResetScreen';
+import { RoutineScreen } from './screens/mind/RoutineScreen';
+import { VisualiseScreen } from './screens/mind/VisualiseScreen';
 import { Plan } from './screens/Plan';
 import { ProfileEdit } from './screens/profile/ProfileEdit';
 import { ProfileOverview } from './screens/profile/ProfileOverview';
@@ -64,13 +68,14 @@ function Header() {
 /** Session mode takes the whole screen: no header or tab bar. */
 function Shell() {
   const [location] = useLocation();
-  if (location.startsWith('/session/')) {
+  if (location.startsWith('/session/') || location === '/mind/visualise') {
     return (
       <div className="app app--full">
         <ScrollToTop />
         <Switch>
           <Route path="/session/:date/log" component={SessionMode} />
           <Route path="/session/:date" component={SessionMode} />
+          <Route path="/mind/visualise" component={VisualiseScreen} />
         </Switch>
       </div>
     );
@@ -87,6 +92,9 @@ function Shell() {
             <Route path="/drills/:id" component={DrillDetail} />
             <Route path="/progress" component={Progress} />
             <Route path="/mind" component={Mind} />
+            <Route path="/mind/lessons/:id" component={LessonScreen} />
+            <Route path="/mind/reset" component={ResetScreen} />
+            <Route path="/mind/routine" component={RoutineScreen} />
             <Route path="/settings" component={Settings} />
             <Route path="/profile" component={ProfileOverview} />
             <Route path="/profile/edit/:section" component={ProfileEdit} />

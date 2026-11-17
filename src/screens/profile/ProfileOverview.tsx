@@ -4,6 +4,7 @@ import { BackLink } from '../../components/forms';
 import type { HealthFlag, Profile } from '../../db/types';
 import { useProfile } from '../../hooks/useData';
 import { formatShort } from '../../lib/dates';
+import { lowerFirst } from '../../lib/format';
 import { BODY_AREA_LABEL, EQUIPMENT, FOOT_LABELS, TRAINING_WINDOWS } from '../../profile/meta';
 import { NoProfile } from './NoProfile';
 
@@ -202,7 +203,7 @@ export function ProfileOverview() {
           <Lines
             items={[
               p.mind.problemMoment && `The moment: ${p.mind.problemMoment}`,
-              ...p.mind.ifThen.map((x) => `If ${x.when.toLowerCase()} → ${x.then.toLowerCase()}`),
+              ...p.mind.ifThen.map((x) => `If ${lowerFirst(x.when)} → ${lowerFirst(x.then)}`),
             ]}
           />
         </Section>

@@ -18,3 +18,12 @@ export function daysSince(isoTimestamp: string | null | undefined, now = new Dat
   if (Number.isNaN(d.getTime())) return null;
   return daysBetween(toISODate(d), todayISO(now));
 }
+
+/**
+ * Lower-case the first letter so a phrase reads mid-sentence ("If the
+ * defender…"), but leave "I", "I'm" and acronyms like "1v1" alone.
+ */
+export function lowerFirst(t: string): string {
+  if (/^(I\b|I'|[A-Z]{2,})/.test(t)) return t;
+  return t.charAt(0).toLowerCase() + t.slice(1);
+}
