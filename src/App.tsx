@@ -6,6 +6,7 @@ import { TabBar } from './components/TabBar';
 import { ToastHost } from './components/Toast';
 import { UpdateBanner } from './components/UpdateBanner';
 import { DataScreen } from './screens/DataScreen';
+import { DrillDetail } from './screens/DrillDetail';
 import { Drills } from './screens/Drills';
 import { Mind } from './screens/Mind';
 import { Plan } from './screens/Plan';
@@ -70,6 +71,7 @@ export function App() {
             <Route path="/" component={Today} />
             <Route path="/plan" component={Plan} />
             <Route path="/drills" component={Drills} />
+            <Route path="/drills/:id" component={DrillDetail} />
             <Route path="/progress" component={Progress} />
             <Route path="/mind" component={Mind} />
             <Route path="/settings" component={Settings} />

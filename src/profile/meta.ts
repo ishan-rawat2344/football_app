@@ -34,7 +34,7 @@ export const SKILL_GROUPS: SkillGroup[] = [
       { key: 'pace', label: 'Pace / acceleration', hint: 'First 5 metres and top speed' },
       { key: 'stamina', label: 'Stamina', hint: 'Still sprinting in the last 15 minutes' },
       { key: 'strength', label: 'Strength', hint: 'Shielding, duels, holding your line' },
-      { key: 'heading', label: 'Heading', hint: 'Low priority in 9/10-a-side' },
+      { key: 'heading', label: 'Heading', hint: 'Low priority in small-sided games' },
     ],
   },
   {

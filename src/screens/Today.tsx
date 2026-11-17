@@ -1,5 +1,8 @@
 import { Link } from 'wouter';
-import type { HealthFlag } from '../db/types';
+import type { HealthFlag, Ratings } from '../db/types';
+import { DRILLS } from '../drills/library';
+import { CATEGORY_LABEL } from '../drills/meta';
+import { healthWarnings, priorityScore } from '../drills/personal';
 import { useProfile, useRatingHistory, useSetting } from '../hooks/useData';
 import { daysBetween, formatShort, todayISO } from '../lib/dates';
 import { daysSince, timeAgo } from '../lib/format';
@@ -9,8 +12,22 @@ import { RERATE_AFTER_DAYS, daysSinceLastRating } from './Ratings';
 
 const BACKUP_EVERY_DAYS = 7;
 
+/**
+ * Until the plan engine (M3): the three drills that hit your weakest skills,
+ * one per category, skipping any your health notes say to go easy on.
+ */
+function topDrills(ratings: Ratings, flags: HealthFlag[]) {
+  const seen = new Set<string>();
+  return DRILLS.filter((d) => d.category !== 'warmup' && d.category !== 'cooldown')
+    .filter((d) => !healthWarnings(d, flags).some((w) => w.level === 'stop'))
+    .map((d, i) => ({ d, i, score: priorityScore(d, ratings) }))
+    .sort((a, b) => b.score - a.score || a.i - b.i)
+    .filter(({ d }) => (seen.has(d.category) ? false : (seen.add(d.category), true)))
+    .slice(0, 3)
+    .map((x) => x.d);
+}
+
 const ROADMAP = [
-  { label: 'The drill library', milestone: 'M2' },
   { label: 'Your rolling training plan', milestone: 'M3' },
   { label: 'Session mode for the pitch', milestone: 'M4' },
   { label: 'Match log and weekly focus', milestone: 'M5' },
@@ -93,6 +110,33 @@ export function Today() {
             <ul className="bullets bullets--hero">
               {profile.goals.weeks4.map((g) => (
                 <li key={g}>{g}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {profile && history.length > 0 && (
+          <section className="card">
+            <p className="card__eyebrow">Start here</p>
+            <p className="card__body" style={{ marginBottom: 8 }}>
+              The drills that hit your weakest skills. Your full plan arrives in M3.
+            </p>
+            <ul className="list">
+              {topDrills(history.at(-1)?.ratings ?? {}, profile.health).map((d) => (
+                <li key={d.id}>
+                  <Link href={`/drills/${d.id}`} className="list-link">
+                    <span>
+                      <strong>{d.name}</strong>
+                      <br />
+                      <span className="muted">
+                        {CATEGORY_LABEL[d.category]} · {d.durationMin} min
+                      </span>
+                    </span>
+                    <span className="chevron" aria-hidden="true">
+                      ›
+                    </span>
+                  </Link>
+                </li>
               ))}
             </ul>
           </section>

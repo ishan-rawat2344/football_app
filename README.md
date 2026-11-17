@@ -4,8 +4,9 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status:** Milestones 0–1 are done: the offline app shell, plus your profile, skill ratings,
-> and backup and restore. See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
+> **Status:** Milestones 0–2 are done: the offline app shell; your profile, skill ratings, and backup
+> and restore; and a library of 54 coach-written drills sorted around your weaknesses. See
+> [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
 
 ---
 
@@ -157,6 +158,13 @@ Your data is stored separately and isn't touched by either.
 
 ---
 
+## Adding or editing a drill
+
+Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
+give it a new `id`, and run `npm test`. The content tests check every drill has the full coach format:
+3 coaching points, mistakes, easier and harder versions, a safety note for risky work, and no
+kicking or sprinting in the small room.
+
 ## Project structure
 
 ```
@@ -169,6 +177,8 @@ src/
   db/                 Dexie (IndexedDB) database: schema in db.ts, record shapes in types.ts
   data/               import, backup and restore (importExport.ts is pure and unit-tested)
   profile/            profile labels and defaults (meta.ts), clean-up of imported data (normalize.ts)
+  drills/             the drill library: content/ (one file per area), types, labels,
+                      personal.ts (priority sort and health warnings), drills.test.ts (content checks)
   hooks/              live data hooks (useProfile, useRatingHistory, useSetting)
   lib/                small helpers: dates, formatting, theme, storage
   styles/             tokens.css (colours, sizes, light/dark) and app.css

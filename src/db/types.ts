@@ -66,7 +66,7 @@ export interface HealthFlag {
   status: HealthStatus;
   /** Pain score (0–10) in these areas that turns the traffic light amber. */
   amberAt: number;
-  since: string; // free text, e.g. "Jun 2026"
+  since: string; // free text, e.g. "March"
   reviewBy?: ISODate;
   notes: string;
   /** What the coach should do about it, in plain words. */
@@ -125,7 +125,7 @@ export interface Profile {
   schedule: {
     gamesPerWeekMin: number;
     gamesPerWeekMax: number;
-    gameStartTime: string; // "06:30"
+    gameStartTime: string; // 24-hour "HH:MM"
     gameNoticeDays: number;
     groundSessionsPerWeek: number;
     groundSessionsMax: number;

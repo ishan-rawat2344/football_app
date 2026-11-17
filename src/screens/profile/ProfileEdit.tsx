@@ -172,9 +172,9 @@ function GameEditor({ p, update }: EditorProps) {
   return (
     <>
       <section className="card stack">
-        <TextInput label="Level" value={p.game.level} onChange={game('level')} placeholder="e.g. Casual weekly games" />
-        <TextInput label="Format" value={p.game.format} onChange={game('format')} placeholder="e.g. 9/10-a-side" />
-        <TextInput label="Surface" value={p.game.surface} onChange={game('surface')} placeholder="e.g. Artificial turf" />
+        <TextInput label="Level" value={p.game.level} onChange={game('level')} placeholder="e.g. Sunday league" />
+        <TextInput label="Format" value={p.game.format} onChange={game('format')} placeholder="e.g. 7-a-side" />
+        <TextInput label="Surface" value={p.game.surface} onChange={game('surface')} placeholder="e.g. Grass" />
         <TextArea label="Team shape and your role" rows={2} value={p.game.teamShape} onChange={game('teamShape')} />
         <NumberInput label="Game length" unit="min" value={p.game.matchMinutes} onChange={game('matchMinutes')} />
         <NumberInput label="Minutes you usually play" unit="min" value={p.game.minutesPlayed} onChange={game('minutesPlayed')} />
@@ -342,7 +342,7 @@ function HealthEditor({ p, update }: EditorProps) {
       </section>
       {p.health.map((h, i) => (
         <section className="card stack" key={h.id}>
-          <TextInput label="What is it?" value={h.title} onChange={(title) => setFlag(i, { title })} placeholder="e.g. Right ankle sprain" />
+          <TextInput label="What is it?" value={h.title} onChange={(title) => setFlag(i, { title })} placeholder="e.g. Tight calf" />
           <Segmented
             label="Status"
             value={h.status}
@@ -360,7 +360,7 @@ function HealthEditor({ p, update }: EditorProps) {
             unit="/ 10"
             onChange={(amberAt) => setFlag(i, { amberAt })}
           />
-          <TextInput label="Since" value={h.since} onChange={(since) => setFlag(i, { since })} placeholder="e.g. Jun 2026" />
+          <TextInput label="Since" value={h.since} onChange={(since) => setFlag(i, { since })} placeholder="e.g. March" />
           <TextInput
             label="Review by"
             type="date"

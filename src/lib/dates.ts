@@ -1,6 +1,6 @@
 /**
- * Calendar-date helpers. Dates are stored as local "YYYY-MM-DD" strings so a
- * 6:30am game always lands on the right day, whatever the timezone offset.
+ * Calendar-date helpers. Dates are stored as local "YYYY-MM-DD" strings so an
+ * early-morning game always lands on the right day, whatever the timezone offset.
  */
 
 export type ISODate = string; // "YYYY-MM-DD"
