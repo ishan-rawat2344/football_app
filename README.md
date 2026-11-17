@@ -290,6 +290,26 @@ Nine solo tests, every 4 weeks (Progress → Tests):
   appear at the top.
 - **Your words.** Your cue words and if → then plans, editable any time.
 
+## YouTube tutorials
+
+Every drill has a **Tutorial videos** section, and the **Videos** screen (from Today's focus card, the Drills
+page or Settings) shows tutorials for this week's focus, your saved videos and your channel choices.
+
+- **Picked for a winger.** Each drill has its own searches. Results skip Shorts, videos over 20 minutes,
+  live streams, highlight reels, compilations, game clips and other languages. They're ranked by YouTube's
+  relevance, views, like rate, how recent they are, and a good length for a drill (3–12 minutes).
+- **Your feedback.** **Save** keeps a video in Videos. **Helpful** moves that channel up; **Hide** removes the
+  video and moves its channel down. The **⋯** button lets you **trust** a channel (always near the top) or
+  **never show** it. You can undo any of these in Videos → Your choices.
+- **Saving quota.** YouTube gives 100 searches a day. The app stops at 95, shows the time it resets (midnight
+  US Pacific, so the afternoon in India), and keeps results on the phone for 2 weeks so the same screen
+  doesn't search again. A drill's videos only load when you scroll to them. **Different search** tries the
+  drill's next search.
+- **YouTube's rules.** Video details are refreshed or deleted within 30 days. This runs when the app opens.
+  Saved videos are refreshed, so they stay.
+- Videos play inside the app using YouTube's privacy-enhanced player (`youtube-nocookie.com`). They need the
+  internet; everything else works offline.
+
 ## Adding or editing a drill
 
 Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
@@ -316,6 +336,8 @@ src/
   session/            session mode logic: run.ts (state machine), device.ts (wake lock, beeps,
                       speech), save.ts; screens in screens/session/
   focus/              weekly focus from match logs (focus.ts, focus.test.ts)
+  videos/             YouTube: youtube.ts (API calls), rank.ts (filters and ranking), store.ts (cache,
+                      daily search count, save/like/hide), queries.ts (focus-area searches), tests
   mind/               lessons.ts, routine.ts (bedtime, checklists, reset word, visualisation script)
   tests/              the 9 solo tests (defs.ts) and PBs, trends, due dates, weekly load (results.ts)
   components/charts   hand-written SVG line, bar and sparkline charts
@@ -331,11 +353,32 @@ private/              your personal profile (git-ignored)
 
 ## API keys
 
-None are needed yet. The YouTube key arrives in Milestone 8, with step-by-step setup instructions.
+The only key is a **free YouTube Data API v3 key**. No card or billing is needed. The app walks you through it in
+**Settings → YouTube videos → Set up**, with copy buttons for the address to paste. Here are the same steps; a
+laptop is easiest:
 
-- **On your phone:** paste the key into the app's Settings. It's stored only on the device.
-- **For local development:** run `cp .env.example .env` and put the key in `.env`. That file is git-ignored.
-  **Never commit `.env`.**
+1. Open [Google Cloud Console](https://console.cloud.google.com/) and sign in with your Google account. You can
+   skip any free-trial offer.
+2. Project picker at the top → **New project** → name it `Touchline` → **Create**. Make sure it's selected.
+3. Open the [YouTube Data API v3 page](https://console.cloud.google.com/apis/library/youtube.googleapis.com) →
+   **Enable**.
+4. [Credentials](https://console.cloud.google.com/apis/credentials) → **+ Create credentials** → **API key**.
+   If it offers a service account, leave that off.
+5. Open the key and lock it down:
+   - **Application restrictions → Websites**, add `https://<your-github-username>.github.io/*` (the app shows
+     the exact address) and, for local development, `http://localhost:5173/*`.
+   - **API restrictions → Restrict key**, and tick only **YouTube Data API v3**.
+   - **Save**. Changes can take up to 5 minutes to start working.
+6. In the app: **Settings → YouTube videos → Set up**, paste the key, then **Test and save**.
+
+Where the key lives:
+
+- **On your phone:** only in the app's database on the device. It is never in the code, never on the
+  website, and never in backups. That's why each device needs the key pasted once.
+- **For local development (optional):** run `cp .env.example .env` and put the key in `.env`. That file is
+  git-ignored, and production builds ignore it. **Never commit `.env`.**
+- **If a key leaks**, delete it in Google Cloud → Credentials and make a new one. The website restriction
+  already stops other sites from using it.
 
 ## Troubleshooting
 
@@ -345,3 +388,6 @@ None are needed yet. The YouTube key arrives in Milestone 8, with step-by-step s
 | Blank page on GitHub Pages | Check **Settings → Pages → Source** is "GitHub Actions" and the Actions run passed |
 | The phone shows an old version | Open the app and wait for "A new version is ready", or use **Repair app** |
 | "Works offline: Not yet" | Open the app once while online and wait a few seconds, then check again |
+| Videos say "key wasn't accepted" | Copy the whole key again (about 39 characters, starts with `AIza`) |
+| Videos say "website restriction doesn't include this app" | In Google Cloud, add the address shown in **Set up** step 5, wait 5 minutes |
+| Videos say "not enabled" | Enable **YouTube Data API v3** for the same project as the key (step 3) |

@@ -68,7 +68,8 @@ export function Drills() {
         {DRILLS.length} drills for a left winger.{' '}
         {hasRatings
           ? 'Sorted for you: drills on your weakest skills come first.'
-          : 'Rate your skills and this list sorts itself around your weaknesses.'}
+          : 'Rate your skills and this list sorts itself around your weaknesses.'}{' '}
+        <Link href="/videos">Saved videos</Link>
       </p>
 
       <div className="stack">

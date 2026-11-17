@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { SystemCheck } from '../components/SystemCheck';
@@ -6,6 +7,7 @@ import { formatShort } from '../lib/dates';
 import { timeAgo } from '../lib/format';
 import { getTheme, setTheme, type ThemeChoice } from '../lib/theme';
 import { FOOT_LABELS } from '../profile/meta';
+import { getApiKey } from '../videos/store';
 import { NoProfile } from './profile/NoProfile';
 
 const THEMES: { value: ThemeChoice; label: string }[] = [
@@ -19,6 +21,7 @@ export function Settings() {
   const profile = useProfile();
   const history = useRatingHistory();
   const lastBackupAt = useSetting<string>('lastBackupAt');
+  const hasKey = useLiveQuery(async () => !!(await getApiKey()), [], 'loading' as const);
 
   function choose(t: ThemeChoice) {
     setTheme(t);
@@ -81,12 +84,32 @@ export function Settings() {
         <SystemCheck />
 
         <section className="card">
+          <div className="card__head">
+            <p className="card__eyebrow" style={{ margin: 0 }}>
+              YouTube videos
+            </p>
+            {hasKey !== 'loading' && (
+              <span className={`status ${hasKey ? 'status--ok' : 'status--warn'}`}>{hasKey ? 'Connected' : 'Not set up'}</span>
+            )}
+          </div>
+          <p className="card__body" style={{ marginBottom: 16 }}>
+            {hasKey
+              ? 'Tutorials on every drill and for your weekly focus.'
+              : 'Add a free YouTube key to get tutorials on every drill and for your weekly focus.'}
+          </p>
+          <div className="row">
+            <Link href="/videos" className="btn btn--secondary">
+              Videos
+            </Link>
+            <Link href="/youtube" className="btn btn--secondary">
+              {hasKey ? 'Key settings' : 'Set up'}
+            </Link>
+          </div>
+        </section>
+
+        <section className="card">
           <p className="card__eyebrow">Coming here</p>
           <ul className="list">
-            <li>
-              <span>YouTube API key</span>
-              <span className="coming">M8</span>
-            </li>
             <li>
               <span>Ask Claude</span>
               <span className="coming">M9</span>

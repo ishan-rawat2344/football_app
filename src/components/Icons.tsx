@@ -99,3 +99,40 @@ export function BrandMark({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export const BookmarkIcon = ({ filled, ...p }: IconProps & { filled?: boolean }) => (
+  <Svg {...p}>
+    <path d="M7 4.5h10a1 1 0 0 1 1 1v14l-6-4-6 4v-14a1 1 0 0 1 1-1Z" fill={filled ? 'currentColor' : 'none'} />
+  </Svg>
+);
+
+export const ThumbIcon = ({ filled, ...p }: IconProps & { filled?: boolean }) => (
+  <Svg {...p}>
+    <path
+      d="M7.5 10.5 11 4a2 2 0 0 1 2.6 1.9l-.4 3.6h5.1a2 2 0 0 1 2 2.4l-1.3 6.4a2 2 0 0 1-2 1.7H7.5v-9.5Z"
+      fill={filled ? 'currentColor' : 'none'}
+    />
+    <path d="M3.5 10.5h4V20h-4z" />
+  </Svg>
+);
+
+export const HideIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 12s3.3-6 9-6c1.6 0 3 .5 4.2 1.2M21 12s-3.3 6-9 6c-1.6 0-3-.5-4.2-1.2" />
+    <path d="M9.9 14.1a3 3 0 0 1 4.2-4.2M4 20 20 4" />
+  </Svg>
+);
+
+export const MoreIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    <circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none" />
+  </Svg>
+);
+
+export const PlayIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M8 5.5v13l11-6.5-11-6.5Z" fill="currentColor" stroke="none" />
+  </Svg>
+);

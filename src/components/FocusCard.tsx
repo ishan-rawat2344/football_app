@@ -58,6 +58,11 @@ export function FocusCard({ focus, ratings, compact = false }: { focus: FocusRes
           ))}
         </ul>
       )}
+      {!compact && focus.areas.length > 0 && (
+        <Link href="/videos" className="focus__videos">
+          Tutorial videos for this →
+        </Link>
+      )}
       <p className="field__hint" style={{ marginTop: 12 }}>
         {focus.basedOn === 'matches'
           ? `From your last ${focus.matchCount === 1 ? 'game' : `${focus.matchCount} games`}. Your sessions this week lean towards it.`

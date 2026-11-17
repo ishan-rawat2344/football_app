@@ -1,5 +1,6 @@
 import { useParams } from 'wouter';
 import { BackLink } from '../components/forms';
+import { VideoList } from '../components/VideoList';
 import { formatDose } from '../drills/format';
 import { getDrill } from '../drills/library';
 import {
@@ -33,6 +34,7 @@ export function DrillDetail() {
 
   const ratings = history !== 'loading' ? (history.at(-1)?.ratings ?? {}) : {};
   const warnings = profile && profile !== 'loading' ? healthWarnings(drill, profile.health) : [];
+  const lang = profile && profile !== 'loading' ? profile.prefs.videoLanguage : undefined;
   const d = drill;
 
   return (
@@ -146,17 +148,12 @@ export function DrillDetail() {
           </section>
         )}
 
-        <section className="card">
-          <p className="card__eyebrow">Tutorial videos</p>
-          <p className="card__body">
-            Videos arrive in M8. These searches are lined up for this drill:
-          </p>
-          <ul className="bullets" style={{ marginTop: 8 }}>
-            {d.videoQueries.map((q) => (
-              <li key={q}>"{q}"</li>
-            ))}
-          </ul>
-        </section>
+        {d.videoQueries.length > 0 && (
+          <section className="card">
+            <p className="card__eyebrow">Tutorial videos</p>
+            <VideoList key={d.id} queries={d.videoQueries} lang={lang} />
+          </section>
+        )}
 
         <p className="muted" style={{ fontSize: 'var(--fs-xs)', margin: '0 4px' }}>
           Fits in: {d.blocks.map((b) => BLOCK_LABEL[b]).join(', ')}

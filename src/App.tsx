@@ -23,9 +23,11 @@ import { Progress } from './screens/Progress';
 import { Ratings } from './screens/Ratings';
 import { Settings } from './screens/Settings';
 import { Today } from './screens/Today';
+import { Videos } from './screens/Videos';
+import { YouTubeSetup } from './screens/YouTubeSetup';
 
 /** Screens reached from Settings: the settings icon stays highlighted on them. */
-const SETTINGS_AREA = ['/settings', '/profile', '/ratings', '/data'];
+const SETTINGS_AREA = ['/settings', '/profile', '/ratings', '/data', '/youtube'];
 
 /** Dev-only: open #/__crash to check the crash screen works. */
 function Crash(): never {
@@ -90,6 +92,8 @@ function Shell() {
             <Route path="/plan" component={Plan} />
             <Route path="/drills" component={Drills} />
             <Route path="/drills/:id" component={DrillDetail} />
+            <Route path="/videos" component={Videos} />
+            <Route path="/youtube" component={YouTubeSetup} />
             <Route path="/progress" component={Progress} />
             <Route path="/mind" component={Mind} />
             <Route path="/mind/lessons/:id" component={LessonScreen} />

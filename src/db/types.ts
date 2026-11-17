@@ -290,6 +290,10 @@ export interface VideoRecord {
   channelTitle: string;
   durationSec: number;
   views: number;
+  likes?: number;
+  lang?: string;
+  embeddable?: boolean;
+  isLive?: boolean;
   publishedAt: string;
   fetchedAt: string; // YouTube policy: refresh or delete within 30 days
 }
@@ -310,8 +314,12 @@ export interface VideoFeedback {
 
 export interface ChannelPref {
   channelId: string;
+  channelTitle?: string;
+  /** When channelTitle came from YouTube (it's cleared after 30 days). */
+  titleAt?: string;
   trusted?: boolean;
   blocked?: boolean;
+  /** + for each video you liked from it, − for each you hid. */
   affinity: number;
 }
 
