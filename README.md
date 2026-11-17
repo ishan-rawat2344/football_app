@@ -4,7 +4,7 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status: version 1.0.** All ten planned milestones are done. [docs/PLAN.md](docs/PLAN.md) has the
+> **Status: version 1.1.** All ten planned milestones are done, plus step-by-step drill diagrams. [docs/PLAN.md](docs/PLAN.md) has the
 > original plan, and **Ideas for later** at the end of this file lists what could come next.
 
 ### What it does
@@ -13,7 +13,7 @@ installs on your iPhone's home screen, works offline, and keeps all its data **o
 |---|---|
 | **Today** | Today's session, built from your games, targets, pain and readiness; game-day and night-before routines; weekly focus; reminders to re-rate and back up |
 | **Plan** | The next 7 days, with a one-line reason for each day. Change any day ("can't get to the ground") and the rest re-plans |
-| **Drills** | 54 drills written like a coach's session plan, sorted by your weakest skills, each with tutorial videos |
+| **Drills** | 54 drills written like a coach's session plan, sorted by your weakest skills, with step-by-step diagrams and tutorial videos |
 | **Session mode** | Big buttons and timers for the pitch, a spoken cue caller, a readiness check, pain logging, and effort and difficulty ratings |
 | **Progress** | Match log, solo tests, personal bests, charts against your targets, and training load |
 | **Mind** | Pre-match routine, the reset after a mistake, visualisation, 10 short lessons, your cue words |
@@ -357,6 +357,26 @@ How it works and what it costs:
 - **Paid version (option B), not built:** a chat inside the app would need a Claude API key and is billed
   per message. That's why option A was chosen.
 
+## Drill diagrams
+
+41 drills have a top-down diagram on their page, above "Why you're doing this". These are the drills where
+the layout matters: 1v1s, finishing, crossing, receiving, movement, defending, speed and the warm-ups. Body
+exercises like Nordics, Copenhagen planks and stretches have none; their videos show body position better.
+
+- **Set-up first**, then one frame per step. **›** and **‹** move through it, **Play** steps through on its
+  own, and the dots jump to any step. The text under the buttons is that step from the drill.
+- **Key:** red circle = you, blue = your partner, white = the ball, orange cones = markers (big ones stand
+  in for a defender). Wavy line = dribble, dashed = run without the ball, solid = pass or shot, short
+  orange dashes = a fake or body shape, dotted = a look over the shoulder.
+- On the pitch you attack **up the screen**, with the touchline on the left. Wall drills have the wall at
+  the top.
+- **In session mode**, tap **Diagram** (next to **How to do it**) to check the set-up at the pitch.
+- Distances are roughly to scale, and every important one is labelled.
+
+To change a diagram, edit `src/drills/diagrams/content/`. Points are in metres from the top-left corner,
+and `npm test` checks each diagram stays inside its area and matches the drill's steps. In development,
+open `#/__diagrams` to see them all at once.
+
 ## Adding or editing a drill
 
 Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
@@ -386,6 +406,8 @@ src/
   videos/             YouTube: youtube.ts (API calls), rank.ts (filters and ranking), store.ts (cache,
                       daily search count, save/like/hide), queries.ts (focus-area searches), tests
   ask/                Ask Claude: pack.ts builds the summary you paste into Claude (pack.test.ts)
+  drills/diagrams/    drill diagrams: types.ts, geometry.ts (positions, curves, wavy dribbles),
+                      content/ (one file per group); drawn by components/DrillDiagram.tsx
   mind/               lessons.ts, routine.ts (bedtime, checklists, reset word, visualisation script)
   tests/              the 9 solo tests (defs.ts) and PBs, trends, due dates, weekly load (results.ts)
   components/charts   hand-written SVG line, bar and sparkline charts
@@ -446,7 +468,6 @@ These are not built. They were parked in the plan:
 
 - An in-app Claude chat (option B: paid API, needs a key)
 - Summer and monsoon modes (heat, wet pitches)
-- Pitch diagrams for drills
 - A gym programme
 - More heading work
 - Tagging match-video timestamps

@@ -1,7 +1,9 @@
 import { useParams } from 'wouter';
+import { DrillDiagramView } from '../components/DrillDiagram';
 import { BackLink } from '../components/forms';
 import { VideoList } from '../components/VideoList';
 import { formatDose } from '../drills/format';
+import { getDiagram } from '../drills/diagrams';
 import { getDrill } from '../drills/library';
 import {
   BLOCK_LABEL,
@@ -36,6 +38,7 @@ export function DrillDetail() {
   const warnings = profile && profile !== 'loading' ? healthWarnings(drill, profile.health) : [];
   const lang = profile && profile !== 'loading' ? profile.prefs.videoLanguage : undefined;
   const d = drill;
+  const diagram = getDiagram(d.id);
 
   return (
     <>
@@ -64,6 +67,13 @@ export function DrillDetail() {
           <section className="card card--note" role="note">
             <p className="card__eyebrow">Safety</p>
             <p className="card__body">{d.safety}</p>
+          </section>
+        )}
+
+        {diagram && (
+          <section className="card">
+            <p className="card__eyebrow">Diagram</p>
+            <DrillDiagramView key={d.id} drill={d} diagram={diagram} />
           </section>
         )}
 

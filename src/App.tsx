@@ -7,6 +7,7 @@ import { ToastHost } from './components/Toast';
 import { UpdateBanner } from './components/UpdateBanner';
 import { AskClaude } from './screens/AskClaude';
 import { DataScreen } from './screens/DataScreen';
+import { DiagramGallery } from './screens/DiagramGallery';
 import { DrillDetail } from './screens/DrillDetail';
 import { SessionMode } from './screens/session/SessionMode';
 import { Drills } from './screens/Drills';
@@ -111,6 +112,7 @@ function Shell() {
             <Route path="/match/:id" component={MatchForm} />
             <Route path="/tests/:id" component={TestScreen} />
             {import.meta.env.DEV && <Route path="/__crash" component={Crash} />}
+            {import.meta.env.DEV && <Route path="/__diagrams" component={DiagramGallery} />}
             <Route>
               <h1 className="page-title">Not found</h1>
               <p className="page-lede">

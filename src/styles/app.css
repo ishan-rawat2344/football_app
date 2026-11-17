@@ -2607,3 +2607,299 @@ h3 {
   color: var(--text-muted);
   font-size: var(--fs-sm);
 }
+
+/* ---------- Drill diagrams ---------- */
+
+.dg-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.dg--pitch {
+  --dg-bg: var(--dg-pitch);
+  --dg-ink: #ffffff;
+  --dg-markings: rgba(255, 255, 255, 0.75);
+  --dg-feint: #fcd34d;
+}
+
+.dg--terrace {
+  --dg-bg: var(--dg-terrace);
+  --dg-ink: var(--dg-ink-dark);
+  --dg-markings: color-mix(in srgb, var(--dg-ink-dark) 45%, transparent);
+  --dg-feint: #d97706;
+}
+
+.dg--room {
+  --dg-bg: var(--dg-room);
+  --dg-ink: var(--dg-ink-dark);
+  --dg-markings: color-mix(in srgb, var(--dg-ink-dark) 45%, transparent);
+  --dg-feint: #d97706;
+}
+
+.dg__bg {
+  fill: var(--dg-bg);
+}
+
+.dg__label {
+  fill: var(--dg-ink);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.dg__cone {
+  fill: #f59e0b;
+  stroke: #7c2d12;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.dg__line {
+  stroke: var(--dg-markings);
+  stroke-width: 2;
+}
+
+.dg__line--dashed {
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+}
+
+.dg__wall {
+  stroke: var(--dg-wall);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+.dg__target {
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-dasharray: 3 2;
+}
+
+.dg__goal {
+  stroke: #ffffff;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.dg__net {
+  fill: rgba(255, 255, 255, 0.18);
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 1;
+}
+
+.dg__zone {
+  fill: color-mix(in srgb, var(--dg-ink) 12%, transparent);
+  stroke: var(--dg-markings);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.dg__move {
+  fill: none;
+  stroke: var(--dg-ink);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dg__move--partner {
+  stroke: #60a5fa;
+}
+
+.dg__move--run {
+  stroke-dasharray: 6 5;
+}
+
+.dg__move--shot {
+  stroke-width: 2.8;
+}
+
+.dg__move--feint {
+  stroke: var(--dg-feint);
+  stroke-width: 3;
+  stroke-dasharray: 3 3;
+}
+
+.dg__move--look {
+  stroke-width: 1.6;
+  stroke-dasharray: 1 4;
+}
+
+.dg__move--past {
+  opacity: 0.32;
+}
+
+.dg__head--ink {
+  fill: var(--dg-ink);
+}
+
+.dg__head--partner {
+  fill: #60a5fa;
+}
+
+.dg__head--feint {
+  fill: var(--dg-feint);
+}
+
+.dg__me {
+  fill: #e6393e;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.dg__partner {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.dg__ball {
+  fill: #ffffff;
+  stroke: #0b1530;
+  stroke-width: 1.2;
+}
+
+.dg-cue {
+  display: inline-block;
+  margin: 4px 0 2px;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.dg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.dg-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dg-legend .dg__move {
+  stroke: var(--text-muted);
+}
+
+.dg-legend .dg__move--feint {
+  stroke: #d97706;
+}
+
+.dg-caption__title {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.dg-caption__text {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+}
+
+.dg-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.dg-controls .btn--secondary {
+  min-width: 44px;
+  padding: 0;
+  font-size: 1.4rem;
+}
+
+.dg-dots {
+  display: flex;
+  margin-top: calc(var(--space-2) * -1);
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
+
+.dg-dot {
+  width: 22px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.dg-dot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.dg-dot[aria-current='step']::after {
+  background: var(--accent);
+  width: 10px;
+  height: 10px;
+}
+
+.dg-play {
+  flex: 1;
+  max-width: 180px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dg__actor {
+    transition: transform 0.7s ease;
+  }
+
+  .dg__move--now {
+    animation: dg-in 0.5s ease;
+  }
+}
+
+@keyframes dg-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.run__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.run__toggles .run__steps-toggle[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.run__diagram {
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}

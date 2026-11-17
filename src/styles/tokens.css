@@ -41,6 +41,13 @@
   --chart-wash: rgba(37, 99, 201, 0.1);
   --chart-grid: #e3e8f2;
 
+  /* drill diagrams */
+  --dg-pitch: #2f7d4a;
+  --dg-terrace: #dfe3ea;
+  --dg-room: #ece2d2;
+  --dg-ink-dark: #0b1530;
+  --dg-wall: #b5523b;
+
   /* Type: system fonts only, so nothing has to download and it works offline. */
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto,
     sans-serif;
@@ -95,6 +102,11 @@
     --chart: #4f86e8;
     --chart-wash: rgba(79, 134, 232, 0.12);
     --chart-grid: #1c2a52;
+    --dg-pitch: #1f5a36;
+    --dg-terrace: #26324f;
+    --dg-room: #3a3224;
+    --dg-ink-dark: #eaf0ff;
+    --dg-wall: #d0745a;
   }
 }
 
@@ -124,4 +136,9 @@
   --chart: #4f86e8;
   --chart-wash: rgba(79, 134, 232, 0.12);
   --chart-grid: #1c2a52;
+  --dg-pitch: #1f5a36;
+  --dg-terrace: #26324f;
+  --dg-room: #3a3224;
+  --dg-ink-dark: #eaf0ff;
+  --dg-wall: #d0745a;
 }

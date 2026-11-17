@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HealthFlag } from '../../db/types';
+import { DrillDiagramView } from '../../components/DrillDiagram';
 import { CUES, nextCue, type CueSet } from '../../drills/cues';
+import { getDiagram } from '../../drills/diagrams';
 import { getDrill } from '../../drills/library';
 import { BLOCK_LABEL } from '../../drills/meta';
 import { describeAreas } from '../../drills/personal';
@@ -49,9 +51,11 @@ export function RunView({
   const now = useNow(250);
   const item = currentItem(run)!;
   const drill = getDrill(item.drillId)!;
+  const diagram = getDiagram(item.drillId);
   const left = secondsLeft(run, now);
   const paused = run.pausedLeft !== null;
   const [showSteps, setShowSteps] = useState(false);
+  const [showDiagram, setShowDiagram] = useState(false);
   const [painOpen, setPainOpen] = useState(false);
   const [message, setMessage] = useState<{ text: string; tone: 'amber' | 'red' } | null>(null);
   const [sound, setSound] = useState(soundEnabled);
@@ -75,6 +79,7 @@ export function RunView({
   // Warm-ups and cool-downs are sequences: show their steps from the start.
   useEffect(() => {
     setShowSteps(item.block === 'warmup' || item.block === 'cooldown');
+    setShowDiagram(false);
   }, [run.index, item.block]);
 
   // 3-2-1 countdown beeps.
@@ -232,9 +237,21 @@ export function RunView({
                 ))}
               </ol>
             )}
-            <button className="run__steps-toggle" onClick={() => setShowSteps(!showSteps)}>
-              {showSteps ? 'Hide steps' : 'How to do it'}
-            </button>
+            <div className="run__toggles">
+              <button className="run__steps-toggle" onClick={() => setShowSteps(!showSteps)}>
+                {showSteps ? 'Hide steps' : 'How to do it'}
+              </button>
+              {diagram && (
+                <button className="run__steps-toggle" aria-pressed={showDiagram} onClick={() => setShowDiagram(!showDiagram)}>
+                  {showDiagram ? 'Hide diagram' : 'Diagram'}
+                </button>
+              )}
+            </div>
+            {showDiagram && diagram && (
+              <div className="run__diagram">
+                <DrillDiagramView key={drill.id} drill={drill} diagram={diagram} />
+              </div>
+            )}
             {showSteps && (
               <ol className="run__steps">
                 {drill.steps.map((s) => (
