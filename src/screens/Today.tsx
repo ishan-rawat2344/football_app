@@ -28,11 +28,6 @@ const BACKUP_EVERY_DAYS = 7;
 
 const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
-const ROADMAP = [
-  { label: 'YouTube tutorials', milestone: 'M8' },
-  { label: 'Ask Claude', milestone: 'M9' },
-];
-
 function greeting(now = new Date()) {
   const h = now.getHours();
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
@@ -524,17 +519,17 @@ export function Today() {
           </section>
         )}
 
-        <section className="card">
-          <p className="card__eyebrow">What's coming</p>
-          <ul className="list">
-            {ROADMAP.map((r) => (
-              <li key={r.milestone}>
-                <span>{r.label}</span>
-                <span className="coming">{r.milestone}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {profile && (
+          <Link href="/ask" className="card card--link ask-link">
+            <span>
+              <span className="card__eyebrow">Second opinion</span>
+              <span className="ask-link__title">Ask Claude about your week</span>
+            </span>
+            <span className="chevron" aria-hidden="true">
+              ›
+            </span>
+          </Link>
+        )}
       </div>
     </>
   );

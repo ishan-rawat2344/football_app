@@ -33,7 +33,7 @@ function useOnline() {
 }
 
 /**
- * Milestone 0 diagnostics: confirms the database, persistent storage,
+ * Diagnostics: confirms the database, persistent storage,
  * offline cache and home-screen install all work on the phone.
  */
 export function SystemCheck() {

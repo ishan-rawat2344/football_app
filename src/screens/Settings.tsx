@@ -108,13 +108,13 @@ export function Settings() {
         </section>
 
         <section className="card">
-          <p className="card__eyebrow">Coming here</p>
-          <ul className="list">
-            <li>
-              <span>Ask Claude</span>
-              <span className="coming">M9</span>
-            </li>
-          </ul>
+          <p className="card__eyebrow">Ask Claude</p>
+          <p className="card__body" style={{ marginBottom: 16 }}>
+            Copies a summary of your data to paste into Claude for a second opinion. Free, no key needed.
+          </p>
+          <Link href="/ask" className="btn btn--secondary btn--block">
+            Ask Claude
+          </Link>
         </section>
       </div>
     </>

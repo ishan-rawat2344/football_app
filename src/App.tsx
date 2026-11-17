@@ -5,6 +5,7 @@ import { BrandMark, SettingsIcon } from './components/Icons';
 import { TabBar } from './components/TabBar';
 import { ToastHost } from './components/Toast';
 import { UpdateBanner } from './components/UpdateBanner';
+import { AskClaude } from './screens/AskClaude';
 import { DataScreen } from './screens/DataScreen';
 import { DrillDetail } from './screens/DrillDetail';
 import { SessionMode } from './screens/session/SessionMode';
@@ -93,6 +94,8 @@ function Shell() {
             <Route path="/drills" component={Drills} />
             <Route path="/drills/:id" component={DrillDetail} />
             <Route path="/videos" component={Videos} />
+            <Route path="/ask" component={AskClaude} />
+            <Route path="/ask/:topic" component={AskClaude} />
             <Route path="/youtube" component={YouTubeSetup} />
             <Route path="/progress" component={Progress} />
             <Route path="/mind" component={Mind} />

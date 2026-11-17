@@ -136,6 +136,9 @@ export function Progress() {
                   <MatchRow key={m.id} m={m} />
                 ))}
               </ul>
+              <Link href="/ask/game" className="btn btn--secondary btn--block" style={{ marginTop: 14 }}>
+                Ask Claude about your last game
+              </Link>
             </section>
           </>
         )}

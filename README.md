@@ -4,11 +4,32 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status:** Milestones 0–7 are done: the offline app shell; your profile, skill ratings, and backup
-> and restore; a library of 54 coach-written drills; a rolling training plan built around your games;
-> session mode for the pitch, which adapts the plan to your effort, ratings and pain; a match log that
-> sets each week's focus; solo tests with charts and personal bests; and a mentality coach.
-> See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
+> **Status: version 1.0.** All ten planned milestones are done. [docs/PLAN.md](docs/PLAN.md) has the
+> original plan, and **Ideas for later** at the end of this file lists what could come next.
+
+### What it does
+
+| Tab or screen | What you get |
+|---|---|
+| **Today** | Today's session, built from your games, targets, pain and readiness; game-day and night-before routines; weekly focus; reminders to re-rate and back up |
+| **Plan** | The next 7 days, with a one-line reason for each day. Change any day ("can't get to the ground") and the rest re-plans |
+| **Drills** | 54 drills written like a coach's session plan, sorted by your weakest skills, each with tutorial videos |
+| **Session mode** | Big buttons and timers for the pitch, a spoken cue caller, a readiness check, pain logging, and effort and difficulty ratings |
+| **Progress** | Match log, solo tests, personal bests, charts against your targets, and training load |
+| **Mind** | Pre-match routine, the reset after a mistake, visualisation, 10 short lessons, your cue words |
+| **Videos** | YouTube tutorials for this week's focus, ranked by what you find helpful |
+| **Ask Claude** | Copies a summary of your data to paste into Claude for a free second opinion |
+
+### A normal week
+
+1. **Each morning** open Today. Tap **Game tomorrow** when you sign up for a game; the plan switches to a
+   sharp session.
+2. **At the session**, tap **Start session**. Session mode runs the drills, then asks how hard it was and whether
+   anything hurt.
+3. **After a game**, tap **Log a match** (about 30 seconds). Your last 3 games set next week's focus.
+4. **Every 4 weeks**, the app asks you to re-rate your skills and redo the solo tests.
+5. **Once a week**, back up (**Settings → Back up, restore or import**). Today reminds you.
+6. **If something hurts**, log it. The plan keeps load off that area and tells you when to see a physio.
 
 ---
 
@@ -19,7 +40,8 @@ installs on your iPhone's home screen, works offline, and keeps all its data **o
 | App code and drill content | This repo | ✅ Yes |
 | Your profile, ratings, health notes | `private/` on your Mac, then the app on your phone | ❌ No (git-ignored) |
 | Your logs, matches, tests | IndexedDB on your phone | ❌ No |
-| API keys | `.env` on your Mac (dev only) / app Settings on your phone | ❌ No (git-ignored) |
+| YouTube API key | The app on your phone (`.env` on your Mac for local development only) | ❌ No (git-ignored, never in backups) |
+| Ask Claude summary | Only copied when you tap the button; you paste it into Claude yourself | ❌ No |
 
 ---
 
@@ -310,6 +332,31 @@ page or Settings) shows tutorials for this week's focus, your saved videos and y
 - Videos play inside the app using YouTube's privacy-enhanced player (`youtube-nocookie.com`). They need the
   internet; everything else works offline.
 
+## Ask Claude
+
+A free second opinion, with your whole picture. Open it from Today (**Ask Claude about your week**), the
+Progress tab (**Ask Claude about your last game**), Mind (**Talk it through**) or Settings.
+
+1. **Pick a topic:** My week, My last game, Weak foot, Mental side, Pain or injury, or Something else. Add
+   your own question if you like.
+2. **Choose what to include:** about you and your goals, ratings, focus and the next 7 days, the last 2
+   weeks of training, recent games, tests, health and pain, and your mental notes. Your name is never
+   included. **See exactly what gets copied** shows the whole text.
+3. Tap **Copy and open Claude**. In Claude, start a new chat, press and hold the message box, tap
+   **Paste** and send.
+
+How it works and what it costs:
+
+- **It's free.** It uses your normal Claude account (the free plan works), not the paid API. There's no key
+  and nothing to set up.
+- **The app sends nothing.** It only copies text; you choose whether to paste it.
+- The summary asks Claude to answer as a UEFA B coach, a strength and conditioning coach and a sport
+  psychologist, to be practical, and never to diagnose injuries.
+- If the phone won't copy automatically, a box appears with the text selected so you can copy it by hand.
+- On iPhone, the link opens the Claude app if it's installed, otherwise claude.ai in Safari.
+- **Paid version (option B), not built:** a chat inside the app would need a Claude API key and is billed
+  per message. That's why option A was chosen.
+
 ## Adding or editing a drill
 
 Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
@@ -338,6 +385,7 @@ src/
   focus/              weekly focus from match logs (focus.ts, focus.test.ts)
   videos/             YouTube: youtube.ts (API calls), rank.ts (filters and ranking), store.ts (cache,
                       daily search count, save/like/hide), queries.ts (focus-area searches), tests
+  ask/                Ask Claude: pack.ts builds the summary you paste into Claude (pack.test.ts)
   mind/               lessons.ts, routine.ts (bedtime, checklists, reset word, visualisation script)
   tests/              the 9 solo tests (defs.ts) and PBs, trends, due dates, weekly load (results.ts)
   components/charts   hand-written SVG line, bar and sparkline charts
@@ -391,3 +439,17 @@ Where the key lives:
 | Videos say "key wasn't accepted" | Copy the whole key again (about 39 characters, starts with `AIza`) |
 | Videos say "website restriction doesn't include this app" | In Google Cloud, add the address shown in **Set up** step 5, wait 5 minutes |
 | Videos say "not enabled" | Enable **YouTube Data API v3** for the same project as the key (step 3) |
+
+## Ideas for later
+
+These are not built. They were parked in the plan:
+
+- An in-app Claude chat (option B: paid API, needs a key)
+- Summer and monsoon modes (heat, wet pitches)
+- Pitch diagrams for drills
+- A gym programme
+- More heading work
+- Tagging match-video timestamps
+- A partner drill pack
+- Notifications
+- Syncing between devices

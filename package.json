@@ -1,7 +1,7 @@
 {
   "name": "touchline",
   "private": true,
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Touchline: a personal football coaching app for a left winger. A phone-first PWA that stores its data on the device.",
   "type": "module",
   "engines": {

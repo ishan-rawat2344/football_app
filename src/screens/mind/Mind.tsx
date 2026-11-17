@@ -80,6 +80,10 @@ export function Mind() {
             <span className="tile__title">Routine</span>
             <span className="tile__sub">The night before and the morning of a game.</span>
           </Link>
+          <Link href="/ask/mind" className="tile">
+            <span className="tile__title">Talk it through</span>
+            <span className="tile__sub">Ask Claude, with your notes and recent games.</span>
+          </Link>
         </div>
 
         <section className="card">
