@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { db, putSetting } from '../db/db';
 import { addDays, todayISO, type ISODate } from '../lib/dates';
-import { planDays, plannedKindFor, summarizeWeek, type WeekSummary } from './engine';
+import { computeStreak, planDays, summarizeWeek, type Streak, type WeekSummary } from './engine';
 import type { DayPlan, PlanInput } from './types';
 
 /** Today's date, kept current if the app stays open past midnight. */
@@ -27,6 +27,7 @@ export interface PlanState {
   /** If yesterday has nothing logged: what it was meant to be. */
   yesterdayPlanned: DayPlan['kind'] | null;
   week: WeekSummary;
+  streak: Streak;
 }
 
 /** Everything the plan needs, live from the database. `null` = no profile yet. */
@@ -37,12 +38,15 @@ export function usePlan(days = 7): PlanState | null | 'loading' {
       const profile = await db.profile.get('me');
       if (!profile) return null;
       const from = addDays(today, -21);
-      const [ratings, games, logs, overrides, planStart] = await Promise.all([
+      const [ratings, games, logs, overrides, planStart, pain, drillStates] = await Promise.all([
         db.ratingSnapshots.orderBy('date').last(),
         db.games.toArray(),
-        db.sessionLogs.where('date').aboveOrEqual(from).toArray(),
+        // 90 days for the streak and the 4-week load check
+        db.sessionLogs.where('date').aboveOrEqual(addDays(today, -90)).toArray(),
         db.plannedSessions.toArray(),
         db.settings.get('planStart'),
+        db.painReports.where('date').aboveOrEqual(from).toArray(),
+        db.drillState.toArray(),
       ]);
       return {
         profile,
@@ -51,6 +55,8 @@ export function usePlan(days = 7): PlanState | null | 'loading' {
         logs,
         overrides: overrides.filter((o) => o.source === 'user'),
         planStart: (planStart?.value as ISODate | undefined) ?? null,
+        pain,
+        drillStates,
       };
     },
     [today],
@@ -74,9 +80,10 @@ export function usePlan(days = 7): PlanState | null | 'loading' {
       // Only ask about days the plan existed for: not before you started using it.
       yesterdayPlanned:
         yesterday && yesterday.kind === 'missed' && !yesterday.logged && yesterday.date >= input.planStart
-          ? plannedKindFor(input, yesterday.date)
+          ? (yesterday.plannedKind ?? null)
           : null,
       week: summarizeWeek(all, input),
+      streak: computeStreak(input),
     };
   }, [data, today, days]);
 }

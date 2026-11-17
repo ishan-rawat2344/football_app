@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { Game, HealthFlag, PlannedSession, Profile, SessionLog } from '../db/types';
+import type { Game, HealthFlag, PainReport, PlannedSession, Profile, SessionLog } from '../db/types';
 import { getDrill } from '../drills/library';
+import { LOAD_TAG_AREAS } from '../drills/types';
 import { addDays } from '../lib/dates';
 import { defaultProfile } from '../profile/meta';
-import { INTENSITY, isLightWeek, planDays, plannedKindFor, summarizeWeek, weekStart } from './engine';
+import { INTENSITY, computeStreak, isLightWeek, planDays, plannedKindFor, summarizeWeek, weekStart } from './engine';
 import type { DayPlan, PlanInput } from './types';
 
 const MON = '2026-11-23'; // a Monday
@@ -295,5 +296,96 @@ describe('logged sessions', () => {
     const today = upcoming(planDays(input({ logs })))[0]!;
     expect(today.blocks).toEqual(blocks);
     expect(today.minutes).toBe(10);
+  });
+});
+
+describe('adapting to what you log', () => {
+  const pain = (date: string, area: PainReport['area'], score: number, when: PainReport['when'] = 'during'): PainReport => ({
+    id: 1,
+    date,
+    area,
+    score,
+    when,
+  });
+
+  it('ankle pain at 4/10 leaves out every drill that loads the ankle for 3 days, and says why', () => {
+    const inp = input({ pain: [pain(MON, 'ankleRight', 4)] });
+    const days = upcoming(planDays(inp, 5));
+    for (const d of days.slice(0, 4)) {
+      for (const b of d.blocks) {
+        for (const it of b.items) {
+          const drill = getDrill(it.drillId)!;
+          const loadsAnkle = drill.loadTags.some((t) => LOAD_TAG_AREAS[t].includes('ankleRight'));
+          if (loadsAnkle) {
+            expect(b.block, `${d.date} ${it.drillId}`).toBe('warmup'); // fixed warm-up stays, but easier
+            expect(it.level).toBe(-1);
+          }
+        }
+      }
+      if (d.kind !== 'rest') expect(d.reasons.join(' ')).toContain('right ankle: 4/10');
+    }
+    expect(days[4]!.restrictions).toEqual([]); // day 4: lifted
+  });
+
+  it('red pain means no hard session', () => {
+    const days = upcoming(planDays(input({ pain: [pain(MON, 'hamstringLeft', 6)] })));
+    expect(days.map((d) => d.kind)).not.toContain('groundHard');
+    expect(days[0]!.kind).toBe('groundTech');
+    expect(days[0]!.reasons[0]).toContain('No hard session while pain is high');
+  });
+
+  it('a training-load spike turns today\'s hard session into a technical one', () => {
+    const logs: SessionLog[] = [];
+    for (let d = 28; d > 7; d -= 3) logs.push({ id: d, date: addDays(MON, -d), status: 'done', sessionType: 'home', minutes: 20, rpe: 4 });
+    for (let d = 7; d >= 2; d -= 2) logs.push({ id: 100 + d, date: addDays(MON, -d), status: 'done', sessionType: 'groundHard', minutes: 75, rpe: 8 });
+    const days = upcoming(planDays(input({ logs, planStart: addDays(MON, -35) })));
+    expect(days[0]!.kind).toBe('groundTech');
+    expect(days[0]!.reasons[0]).toContain('above your 4-week average');
+  });
+
+  it('uses your difficulty level per drill, with a reason', () => {
+    const inp = input({ drillStates: [{ drillId: 'warmup-home', level: 1, recentRatings: [] }] });
+    const home = upcoming(planDays(inp, 7)).find((d) => d.kind === 'home')!;
+    const w = home.blocks[0]!.items[0]!;
+    expect(w).toMatchObject({ drillId: 'warmup-home', level: 1 });
+    expect(w.note).toContain('Harder version');
+  });
+
+  it('every planned drill carries its sets for session mode', () => {
+    for (const d of upcoming(planDays(input(), 7))) {
+      for (const b of d.blocks) for (const it of b.items) expect(it.sets).toBeGreaterThanOrEqual(1);
+    }
+  });
+});
+
+describe('streak', () => {
+  const done = (date: string, sessionType: SessionLog['sessionType'] = 'home', id = 1): SessionLog => ({ id, date, status: 'done', sessionType });
+
+  it('counts sessions in a row; planned rest days and games keep it going', () => {
+    // Mon hard, Tue home, Wed hard, Thu home, Fri home, Sat home, Sun rest (planned) → next Mon
+    const logs = [
+      done('2026-11-23', 'groundHard', 1),
+      done('2026-11-24', 'home', 2),
+      done('2026-11-25', 'groundHard', 3),
+      done('2026-11-26', 'home', 4),
+      done('2026-11-27', 'home', 5),
+      done('2026-11-28', 'home', 6),
+    ];
+    const s = computeStreak(input({ logs, today: '2026-11-30' }));
+    expect(s).toEqual({ current: 6, best: 6 });
+  });
+
+  it('a missed training day breaks it; today not done yet does not', () => {
+    const logs = [done('2026-11-23', 'groundHard', 1), done('2026-11-25', 'groundHard', 2)]; // Tue missed
+    expect(computeStreak(input({ logs, today: '2026-11-26' }))).toEqual({ current: 1, best: 1 });
+  });
+
+  it('a skipped session breaks it', () => {
+    const logs: SessionLog[] = [done('2026-11-23', 'groundHard', 1), { id: 2, date: '2026-11-24', status: 'skipped' }];
+    expect(computeStreak(input({ logs, today: '2026-11-25' })).current).toBe(0);
+  });
+
+  it('days before you started using the plan never count against you', () => {
+    expect(computeStreak(input({ today: MON, planStart: MON }))).toEqual({ current: 0, best: 0 });
   });
 });

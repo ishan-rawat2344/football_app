@@ -1,12 +1,15 @@
 import type {
   DayOverride,
+  DrillState,
   Game,
+  PainReport,
   PlannedSession,
   Profile,
   Ratings,
   SessionLog,
   SessionType,
 } from '../db/types';
+import type { AreaRestriction } from './adapt';
 import type { SessionBlock } from '../drills/types';
 import type { ISODate } from '../lib/dates';
 
@@ -15,6 +18,8 @@ export interface PlannedItem {
   /** -1 = do the easier version, 0 = standard, 1 = harder. */
   level: -1 | 0 | 1;
   minutes: number;
+  /** Sets for today (the drill's dose, scaled for sharp or light days). */
+  sets?: number;
   note?: string;
 }
 
@@ -47,6 +52,10 @@ export interface DayPlan {
   gameTomorrow: boolean;
   /** Swaps the user can pick for this day. */
   options: DayOverride[];
+  /** Past unlogged days: what the plan had for that day. */
+  plannedKind?: SessionType;
+  /** Body areas the plan is protecting because of logged pain. */
+  restrictions: AreaRestriction[];
 }
 
 export interface PlanInput {
@@ -58,6 +67,10 @@ export interface PlanInput {
   overrides: PlannedSession[];
   /** First day the plan ran; light weeks count from here. */
   planStart: ISODate;
+  /** Recent pain reports (traffic light). */
+  pain?: PainReport[];
+  /** Per-drill difficulty from your ratings. */
+  drillStates?: DrillState[];
 }
 
 export interface WeekCounts {

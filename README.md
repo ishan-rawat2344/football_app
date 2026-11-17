@@ -4,8 +4,9 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status:** Milestones 0–3 are done: the offline app shell; your profile, skill ratings, and backup
-> and restore; a library of 54 coach-written drills; and a rolling training plan built around your games.
+> **Status:** Milestones 0–4 are done: the offline app shell; your profile, skill ratings, and backup
+> and restore; a library of 54 coach-written drills; a rolling training plan built around your games; and
+> session mode for the pitch, which adapts the plan to your effort, ratings and pain.
 > See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
 
 ---
@@ -170,6 +171,43 @@ The full rules are in [docs/PLAN.md](docs/PLAN.md). In short, in order:
 Tap **Game today / Game tomorrow** on Today (or "Game this day" on Plan) and everything re-plans. Use the
 swap chips ("Can't get to the ground", "Rest") to change a day; "Back to the plan" undoes it.
 
+## Session mode (at the pitch)
+
+On **Today**, tap **Start session**.
+
+1. **Three taps on how you feel** (sleep, legs, soreness). If you're low, you get the *light version*:
+   no flat-out speed work and fewer sets. You can still choose the full session.
+2. **One drill at a time**, full screen, with controls at the bottom for your thumb:
+   - **Set done** / **Pause** / **Skip rest**. Timed drills count down by themselves (green = work,
+     navy = rest), with beeps at the start and at 3-2-1.
+   - **Pain**: pick where and how bad. At your amber score the rest of the session's drills that load
+     that area are skipped; at 5/10 or more it tells you to stop.
+   - **Skip ›** skips a drill; **✕** ends the session early.
+   - **Cue caller** (on drills like *Gates on the call* or *Scan, receive, go*): the phone calls "Left!",
+     "Turn!", "Man on!" at random moments and shows the word huge on screen.
+3. **Rate each drill**: *too hard* once → easier version next time; *too easy* twice → harder.
+4. **Finish**: effort 1–10, any pain now, notes, then **Save**.
+
+Already trained without the app? Tap **Log it** on Today. If the app closes mid-session, Today shows
+**Resume session**.
+
+**How the plan adapts afterwards**
+- **Pain traffic light** for each body area. *Amber* (your amber score, or 2+/10 the next morning) keeps
+  drills that load that area out for 3 days. *Red* (5+/10, or pain at rest) keeps them out for 7 days, allows
+  no hard sessions, and tells you to see a physio or doctor. The app never diagnoses.
+- **Morning check**: after a session where you logged pain, Today asks how that area feels the next
+  morning. A clear answer (0–1) lifts an amber hold early.
+- **Training load** (effort × minutes): after 3 weeks of history, if the last 7 days are more than 30% above
+  your 4-week average, today's hard session becomes technical.
+- **Streak**: completed sessions and games in a row. Planned rest days don't break it; skipped or missed
+  sessions do.
+
+**iPhone notes**
+- The screen stays awake during a session. If it still dims, update iOS, or raise Settings → Display &
+  Brightness → Auto-Lock.
+- Beeps and spoken cues are set to play even with the silent switch on, but iPhones can still mute them.
+  Everything is also shown on screen in big type and colour, and the 🔊 button turns sound off.
+
 ## Adding or editing a drill
 
 Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
@@ -192,7 +230,9 @@ src/
   drills/             the drill library: content/ (one file per area), types, labels,
                       personal.ts (priority sort and health warnings), drills.test.ts (content checks)
   plan/               the rolling plan: engine.ts (which kind of day), sessions.ts (which drills),
-                      usePlan.ts (live data), actions.ts (games, swaps, logging), engine.test.ts
+                      adapt.ts (pain, load, difficulty), usePlan.ts (live data), actions.ts, tests
+  session/            session mode logic: run.ts (state machine), device.ts (wake lock, beeps,
+                      speech), save.ts; screens in screens/session/
   hooks/              live data hooks (useProfile, useRatingHistory, useSetting)
   lib/                small helpers: dates, formatting, theme, storage
   styles/             tokens.css (colours, sizes, light/dark) and app.css

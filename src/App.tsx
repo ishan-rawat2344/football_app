@@ -7,6 +7,7 @@ import { ToastHost } from './components/Toast';
 import { UpdateBanner } from './components/UpdateBanner';
 import { DataScreen } from './screens/DataScreen';
 import { DrillDetail } from './screens/DrillDetail';
+import { SessionMode } from './screens/session/SessionMode';
 import { Drills } from './screens/Drills';
 import { Mind } from './screens/Mind';
 import { Plan } from './screens/Plan';
@@ -58,11 +59,21 @@ function Header() {
   );
 }
 
-export function App() {
-  // Hash routes (#/plan) work on GitHub Pages without server rewrites and
-  // keep the offline cache simple: there's only ever one HTML page.
+/** Session mode takes the whole screen: no header or tab bar. */
+function Shell() {
+  const [location] = useLocation();
+  if (location.startsWith('/session/')) {
+    return (
+      <div className="app app--full">
+        <ScrollToTop />
+        <Switch>
+          <Route path="/session/:date/log" component={SessionMode} />
+          <Route path="/session/:date" component={SessionMode} />
+        </Switch>
+      </div>
+    );
+  }
   return (
-    <Router hook={useHashLocation}>
       <div className="app">
         <ScrollToTop />
         <Header />
@@ -89,9 +100,19 @@ export function App() {
           </Switch>
         </main>
         <TabBar />
-        <UpdateBanner />
-        <ToastHost />
       </div>
+  );
+}
+
+export function App() {
+  // Hash routes (#/plan) work on GitHub Pages without server rewrites and
+  // keep the offline cache simple: there's only ever one HTML page.
+  return (
+    <Router hook={useHashLocation}>
+      <Shell />
+      {/* Outside the layouts, so a toast survives leaving session mode. */}
+      <UpdateBanner />
+      <ToastHost />
     </Router>
   );
 }

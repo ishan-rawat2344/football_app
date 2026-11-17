@@ -16,6 +16,7 @@
  */
 import type { DayOverride, SessionLog, SessionType } from '../db/types';
 import { addDays, daysBetween, fromISODate, type ISODate } from '../lib/dates';
+import { describeRestriction, loadCheck, painRestrictions } from './adapt';
 import { buildSession, sessionMinutes } from './sessions';
 import type { DayIntensity, DayKind, DayPlan, PlanInput, PlannedBlock, WeekCounts } from './types';
 
@@ -175,8 +176,19 @@ function swapOptions(kind: DayKind, gameTomorrow: boolean, prevHigh: boolean): D
  * from today. Past days come from what actually happened; today and later
  * are decided by the rules. Callers usually show `when !== 'past'`.
  */
-export function planDays(input: PlanInput, days = 7): DayPlan[] {
+export interface PlanOptions {
+  /** Start planning from this date's week instead of yesterday's. */
+  from?: ISODate;
+  /** Skip choosing drills (faster, for streaks and counts). */
+  withBlocks?: boolean;
+}
+
+export function planDays(input: PlanInput, days = 7, opts: PlanOptions = {}): DayPlan[] {
   const { today, profile } = input;
+  const withBlocks = opts.withBlocks ?? true;
+  const pain = input.pain ?? [];
+  const levels = new Map((input.drillStates ?? []).map((s) => [s.drillId, s.level]));
+  const load = loadCheck(input.logs, input.games, today, input.planStart);
   const gameDates = new Set(
     input.games.filter((g) => g.status === 'planned' || g.status === 'played').map((g) => g.date),
   );
@@ -186,7 +198,7 @@ export function planDays(input: PlanInput, days = 7): DayPlan[] {
   const overrideByDate = new Map<ISODate, DayOverride>();
   for (const o of input.overrides) if (o.source === 'user' && o.override) overrideByDate.set(o.date, o.override);
 
-  const start = weekStart(addDays(today, -1));
+  const start = weekStart(opts.from ?? addDays(today, -1));
   const end = addDays(today, days - 1);
 
   const didTrain = (l?: SessionLog) => l && (l.status === 'done' || l.status === 'partial');
@@ -216,6 +228,17 @@ export function planDays(input: PlanInput, days = 7): DayPlan[] {
 
     let kind: DayKind;
     let reasons: string[] = [];
+    let plannedKind: SessionType | undefined;
+    const restrictions = when === 'past' ? [] : painRestrictions(pain, profile.health, d);
+    const decideArgs = {
+      override,
+      gameTomorrow,
+      gameYesterday,
+      prevHigh,
+      week,
+      lastDayOfWeek: fromISODate(d).getDay() === 0,
+      groundMax: profile.schedule.groundSessionsMax,
+    };
 
     if (gameDates.has(d)) {
       kind = 'game';
@@ -225,22 +248,32 @@ export function planDays(input: PlanInput, days = 7): DayPlan[] {
           : 'Game day. Do the activation warm-up before kick-off, then log your match.',
       ];
     } else if (when === 'past') {
-      kind = didTrain(log) ? (log?.sessionType ?? 'home') : 'missed';
+      if (didTrain(log)) kind = log?.sessionType ?? 'home';
+      else {
+        kind = 'missed';
+        plannedKind = decide(decideArgs).kind; // so we can ask "did you do it?" and keep streaks fair
+      }
     } else if (didTrain(log) && log?.sessionType) {
       kind = log.sessionType; // today, already done: keep what you did
       reasons = ['Done today.'];
     } else {
-      const r = decide({
-        override,
-        gameTomorrow,
-        gameYesterday,
-        prevHigh,
-        week,
-        lastDayOfWeek: fromISODate(d).getDay() === 0,
-        groundMax: profile.schedule.groundSessionsMax,
-      });
+      const r = decide(decideArgs);
       kind = r.kind;
       reasons = r.reasons;
+      // Safety overrides: red pain or a load spike turn a hard day into a technical one.
+      const red = restrictions.filter((x) => x.level === 'red');
+      if (kind === 'groundHard' && red.length) {
+        kind = 'groundTech';
+        reasons = [`No hard session while pain is high (${red.map(describeRestriction).join('; ')}). Technical work only.`];
+      } else if (kind === 'groundHard' && when === 'today' && load.spike) {
+        kind = 'groundTech';
+        reasons = [
+          `Your training load in the last 7 days is ${Math.round((load.ratio ?? 0) * 100 - 100)}% above your 4-week average. Easing off: technical session today.`,
+        ];
+      }
+    }
+    if (restrictions.length && kind !== 'rest' && kind !== 'missed') {
+      reasons.push(`Leaving out drills that load your ${restrictions.map(describeRestriction).join('; ')}.`);
     }
 
     if (lightWeek && when !== 'past' && kind !== 'game' && kind !== 'rest') {
@@ -260,7 +293,7 @@ export function planDays(input: PlanInput, days = 7): DayPlan[] {
     const loggedBlocks = didTrain(log) && Array.isArray(log?.blocks) ? (log.blocks as PlannedBlock[]) : null;
     const blocks = loggedBlocks
       ? loggedBlocks
-      : when === 'past' || kind === 'missed'
+      : when === 'past' || kind === 'missed' || !withBlocks
         ? []
         : buildSession(kind, {
             ordinal: weekNo * 7 + nthOfKind,
@@ -269,6 +302,8 @@ export function planDays(input: PlanInput, days = 7): DayPlan[] {
             lightWeek,
             gameTomorrow,
             avoid: lastDrills.get(kind),
+            blockedAreas: new Set(restrictions.map((x) => x.area)),
+            levels,
           });
     if (blocks.length) {
       const ids = blocks.flatMap((b) => b.items.map((i) => i.drillId));
@@ -290,6 +325,8 @@ export function planDays(input: PlanInput, days = 7): DayPlan[] {
       askGameTomorrow: when === 'today' && kind === 'groundHard' && !knownGameStatus.has(addDays(d, 1)),
       gameTomorrow,
       options: when === 'past' ? [] : swapOptions(kind, gameTomorrow, prevHigh),
+      plannedKind,
+      restrictions,
     });
 
     countDay(week, kind);
@@ -300,9 +337,34 @@ export function planDays(input: PlanInput, days = 7): DayPlan[] {
 
 /** What a past, unlogged day would have been, so Today can ask "did you do it?". */
 export function plannedKindFor(input: PlanInput, date: ISODate): SessionType | null {
-  const asIfToday = planDays({ ...input, today: date, logs: input.logs.filter((l) => l.date < date) }, 1);
-  const day = asIfToday.find((x) => x.date === date);
-  return day && day.kind !== 'missed' ? day.kind : null;
+  const day = planDays(input, 1, { from: date, withBlocks: false }).find((x) => x.date === date);
+  if (!day) return null;
+  return day.kind === 'missed' ? (day.plannedKind ?? null) : day.kind;
+}
+
+export interface Streak {
+  current: number;
+  best: number;
+}
+
+/**
+ * Sessions in a row. Completed sessions and games count; planned rest days
+ * don't break it; a skipped or missed training day does. Today only counts
+ * once it's done, and never breaks the streak while it's still to do.
+ */
+export function computeStreak(input: PlanInput): Streak {
+  const from = input.planStart > addDays(input.today, -90) ? input.planStart : addDays(input.today, -90);
+  const days = planDays(input, 1, { from, withBlocks: false }).filter((d) => d.date >= from && d.date <= input.today);
+  let current = 0;
+  let best = 0;
+  for (const d of days) {
+    const trained = d.logged === 'done' || d.logged === 'partial' || (d.kind === 'game' && d.when === 'past');
+    const breaks =
+      d.when === 'past' && (d.logged === 'skipped' || (d.kind === 'missed' && d.plannedKind !== 'rest' && d.plannedKind !== 'game'));
+    if (trained) best = Math.max(best, ++current);
+    else if (breaks) current = 0;
+  }
+  return { current, best };
 }
 
 export interface WeekSummary {

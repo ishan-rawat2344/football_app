@@ -5,7 +5,7 @@
  * between days so you don't do the same drills every time, favour your
  * weakest skills, and respect your health notes.
  */
-import type { HealthFlag, Profile, Ratings, SessionType } from '../db/types';
+import type { BodyArea, HealthFlag, Profile, Ratings, SessionType } from '../db/types';
 import { DRILLS, getDrill } from '../drills/library';
 import { describeAreas, healthWarnings, priorityScore } from '../drills/personal';
 import { LOAD_TAG_AREAS, type Drill, type DrillCategory } from '../drills/types';
@@ -20,7 +20,14 @@ export interface SessionContext {
   gameTomorrow: boolean;
   /** Drills used in the previous session of this kind: picked only if nothing else fits. */
   avoid?: Set<string>;
+  /** Areas with recent pain: drills loading them are left out. */
+  blockedAreas?: Set<BodyArea>;
+  /** Your difficulty level per drill, from your ratings. */
+  levels?: Map<string, -1 | 0 | 1>;
 }
+
+const loadsBlocked = (d: Drill, blocked?: Set<BodyArea>) =>
+  !!blocked?.size && d.loadTags.some((t) => LOAD_TAG_AREAS[t].some((a) => blocked.has(a)));
 
 type Place = 'ground' | 'home';
 
@@ -100,6 +107,7 @@ function candidates(rule: PickRule, ctx: SessionContext): Drill[] {
     if (rule.noCutting && d.loadTags.includes('cutting')) return false;
     if (rule.maxIntensity && INTENSITY_RANK[d.intensity] > INTENSITY_RANK[rule.maxIntensity]) return false;
     if (rule.exclude?.(d)) return false;
+    if (loadsBlocked(d, ctx.blockedAreas)) return false;
     return healthGate(d, flags).ok;
   });
 }
@@ -139,11 +147,25 @@ function pick(rule: PickRule, ctx: SessionContext, slot: number, used: Set<strin
 
 function item(d: Drill, ctx: SessionContext, factor = 1, extraNote?: string): PlannedItem {
   const gate = healthGate(d, ctx.profile.health);
-  const notes = [gate.note, extraNote].filter(Boolean).join(' ');
+  const blocked = loadsBlocked(d, ctx.blockedAreas); // only fixed drills (warm-ups) get here
+  const learned = ctx.levels?.get(d.id) ?? 0;
+  const level: PlannedItem['level'] = gate.level === -1 || blocked ? -1 : learned;
+  const levelNote =
+    blocked
+      ? 'Easier version: you logged pain in an area this loads.'
+      : gate.level === -1
+        ? undefined
+        : learned === 1
+          ? 'Harder version: you found it too easy twice.'
+          : learned === -1
+            ? 'Easier version: you found it too hard last time.'
+            : undefined;
+  const notes = [gate.note, levelNote, extraNote].filter(Boolean).join(' ');
   return {
     drillId: d.id,
-    level: gate.level,
+    level,
     minutes: Math.max(2, Math.round(d.durationMin * factor)),
+    sets: Math.max(1, Math.round(d.dose.sets * factor)),
     ...(notes ? { note: notes } : {}),
   };
 }

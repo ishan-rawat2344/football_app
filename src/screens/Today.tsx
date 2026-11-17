@@ -1,12 +1,19 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { KindBadge, SWAP_LABEL, SessionView } from '../components/SessionView';
 import { toast } from '../components/Toast';
-import type { HealthFlag, SessionType } from '../db/types';
+import { db } from '../db/db';
+import type { BodyArea, HealthFlag, PainReport, SessionType } from '../db/types';
+import { describeAreas } from '../drills/personal';
+import { describeRestriction, type AreaRestriction } from '../plan/adapt';
+import type { RunState } from '../session/run';
+import { logPain } from '../session/save';
 import { useProfile, useRatingHistory, useSetting } from '../hooks/useData';
 import { addDays, daysBetween, formatShort } from '../lib/dates';
 import { daysSince, timeAgo } from '../lib/format';
 import { clearLog, logDay, logPastDay, setGame, setOverride } from '../plan/actions';
+import type { Streak } from '../plan/engine';
 import type { DayPlan } from '../plan/types';
 import { usePlan, useToday } from '../plan/usePlan';
 import { BODY_AREA_LABEL } from '../profile/meta';
@@ -15,8 +22,9 @@ import { RERATE_AFTER_DAYS, daysSinceLastRating } from './Ratings';
 
 const BACKUP_EVERY_DAYS = 7;
 
+const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
 const ROADMAP = [
-  { label: 'Session mode for the pitch', milestone: 'M4' },
   { label: 'Match log and weekly focus', milestone: 'M5' },
   { label: 'Tests, charts and personal bests', milestone: 'M6' },
   { label: 'Mentality coach', milestone: 'M7' },
@@ -92,8 +100,10 @@ function YesterdayCheck({ date, kind }: { date: string; kind: SessionType }) {
   );
 }
 
-function TodaySession({ day }: { day: DayPlan }) {
+function TodaySession({ day, activeRun }: { day: DayPlan; activeRun: RunState | null }) {
   const [busy, setBusy] = useState(false);
+  const [, navigate] = useLocation();
+  const resumable = activeRun?.date === day.date && activeRun.phase !== 'done';
   const tomorrow = addDays(day.date, 1);
   const done = day.logged === 'done' || day.logged === 'partial';
 
@@ -170,18 +180,20 @@ function TodaySession({ day }: { day: DayPlan }) {
               </button>
             </div>
           ) : (
-            <div className="row" style={{ gridTemplateColumns: '1fr 2fr' }}>
-              <button className="btn btn--secondary" disabled={busy} onClick={() => run(() => logDay(day, 'skipped'), 'Logged as skipped')}>
-                Skip
+            <div className="stack" style={{ gap: 8 }}>
+              <button className="btn btn--primary btn--block btn--lg" disabled={busy} onClick={() => navigate(`/session/${day.date}`)}>
+                {resumable ? 'Resume session' : 'Start session'}
               </button>
-              <button className="btn btn--primary" disabled={busy} onClick={() => run(() => logDay(day, 'done'), 'Nice. Session logged')}>
-                Mark done
-              </button>
+              <div className="row">
+                <button className="btn btn--secondary" disabled={busy} onClick={() => run(() => logDay(day, 'skipped'), 'Logged as skipped')}>
+                  Skip today
+                </button>
+                <button className="btn btn--secondary" disabled={busy} onClick={() => navigate(`/session/${day.date}/log`)}>
+                  Log it
+                </button>
+              </div>
             </div>
           )}
-          <p className="field__hint" style={{ marginTop: 8 }}>
-            Session mode with timers, effort and pain check-ins arrives in M4.
-          </p>
         </div>
       )}
 
@@ -215,6 +227,81 @@ function TodaySession({ day }: { day: DayPlan }) {
         </div>
       )}
     </section>
+  );
+}
+
+/** The plan is protecting these areas because of pain you logged. */
+function ProtectingCard({ restrictions }: { restrictions: AreaRestriction[] }) {
+  if (!restrictions.length) return null;
+  const red = restrictions.some((r) => r.level === 'red');
+  return (
+    <section className={`card card--alert ${red ? 'card--alert-stop' : 'card--alert-caution'}`} role="note">
+      <p className="card__eyebrow">{red ? 'Pain is high' : 'Protecting'}</p>
+      <ul className="bullets">
+        {restrictions.map((r) => (
+          <li key={r.area}>
+            {cap(describeRestriction(r))}. Drills that load it are out until {formatShort(r.until)}.
+          </li>
+        ))}
+      </ul>
+      {red && (
+        <p className="card__body" style={{ marginTop: 10, color: 'var(--text)' }}>
+          Don't train through it. If it hasn't settled in a day or two, or it hurts at rest, see a physio or
+          doctor.
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** "How's your groin this morning?" after a session where you logged pain. */
+function MorningCheck({ today, pain }: { today: string; pain: PainReport[] }) {
+  const yesterday = addDays(today, -1);
+  const areas = [
+    ...new Set(pain.filter((p) => p.date === yesterday && p.score >= 1 && p.when !== 'nextMorning').map((p) => p.area)),
+  ].filter((a) => !pain.some((p) => p.date === today && p.when === 'nextMorning' && p.area === a));
+  const [scores, setScores] = useState<Partial<Record<BodyArea, number>>>({});
+  if (!areas.length) return null;
+  return (
+    <section className="card">
+      <p className="card__eyebrow">Morning check</p>
+      {areas.map((a) => {
+        const v = scores[a] ?? 0;
+        return (
+          <div key={a} style={{ marginBottom: 16 }}>
+            <div className="rating__head">
+              <label className="card__title" style={{ margin: 0 }} htmlFor={`m-${a}`}>
+                How's your {describeAreas([a])} this morning?
+              </label>
+              <output className={`pain-score pain-score--${v >= 5 ? 'red' : v >= 2 ? 'amber' : 'green'}`}>{v}</output>
+            </div>
+            <input id={`m-${a}`} className="range" type="range" min={0} max={10} value={v} onChange={(e) => setScores({ ...scores, [a]: Number(e.target.value) })} />
+            <button
+              className="btn btn--secondary btn--block"
+              style={{ marginTop: 8 }}
+              onClick={() =>
+                void logPain({ date: today, area: a, score: v, when: 'nextMorning' }).then(() =>
+                  toast(v >= 2 ? 'Logged. The plan will go easy on it.' : 'Logged. Good news.'),
+                )
+              }
+            >
+              Save
+            </button>
+          </div>
+        );
+      })}
+      <p className="field__hint">Pain that's still there the next morning tells the plan more than pain during training.</p>
+    </section>
+  );
+}
+
+function StreakPill({ streak }: { streak: Streak }) {
+  if (!streak.current && !streak.best) return null;
+  return (
+    <span className="streak">
+      {streak.current} in a row
+      {streak.best > streak.current && <span className="muted"> · best {streak.best}</span>}
+    </span>
   );
 }
 
@@ -257,6 +344,7 @@ export function Today() {
   const history = useRatingHistory();
   const lastBackupAt = useSetting<string>('lastBackupAt');
   const plan = usePlan();
+  const activeRun = useLiveQuery(async () => ((await db.settings.get('activeRun'))?.value as RunState | undefined) ?? null, [], null);
 
   if (profile === 'loading' || history === 'loading' || lastBackupAt === 'loading' || plan === 'loading') return null;
 
@@ -275,6 +363,7 @@ export function Today() {
         {profile ? `${greeting()}${profile.name ? `, ${profile.name}` : ''}` : 'Today'}
       </h1>
       {!profile && <p className="page-lede">Your session for the day will show here.</p>}
+      {plan && <StreakPill streak={plan.streak} />}
 
       <div className="stack" style={{ marginTop: profile ? 12 : 0 }}>
         {!profile && <NoProfile />}
@@ -283,7 +372,11 @@ export function Today() {
           <YesterdayCheck date={plan.yesterday.date} kind={plan.yesterdayPlanned as SessionType} />
         )}
 
-        {day && <TodaySession day={day} />}
+        {plan && <MorningCheck today={today} pain={plan.input.pain ?? []} />}
+
+        {day && <ProtectingCard restrictions={day.restrictions} />}
+
+        {day && <TodaySession day={day} activeRun={activeRun} />}
 
         {plan && <GamesCard today={today} days={plan.days} />}
 
