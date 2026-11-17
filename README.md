@@ -4,9 +4,10 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status:** Milestones 0–4 are done: the offline app shell; your profile, skill ratings, and backup
-> and restore; a library of 54 coach-written drills; a rolling training plan built around your games; and
-> session mode for the pitch, which adapts the plan to your effort, ratings and pain.
+> **Status:** Milestones 0–5 are done: the offline app shell; your profile, skill ratings, and backup
+> and restore; a library of 54 coach-written drills; a rolling training plan built around your games;
+> session mode for the pitch, which adapts the plan to your effort, ratings and pain; and a match log that
+> sets each week's focus.
 > See [docs/PLAN.md](docs/PLAN.md) for the full plan and milestones.
 
 ---
@@ -208,6 +209,27 @@ Already trained without the app? Tap **Log it** on Today. If the app closes mid-
 - Beeps and spoken cues are set to play even with the silent switch on, but iPhones can still mute them.
   Everything is also shown on screen in big type and colour, and the 🔊 button turns sound off.
 
+## Match log and weekly focus
+
+After a game, Today shows **Log your match** (Progress → **Log a match** works any time). It's about
+30 seconds of numbers:
+- **Basics:** minutes, goals and assists.
+- **On the ball:** 1v1s tried and won, shots and shots on target, left-foot actions, and how much of the
+  ball you got.
+- **How it felt:** how hard the game was, your confidence, and whether you kept asking for the ball after
+  losing it.
+- **Optional:** your own words, and a link to the recording once it's up. Open a match later to fill those in.
+
+**Weekly focus** (on Today and Plan) compares your last 3 games (from the last 3 weeks) with your per-game
+targets and picks the two biggest gaps. Examples: *Take defenders on*, *Use your left*, *Get on the ball
+more*, *Demand it again*, *Get shots off*, *Make your moves work*. Each one comes with your numbers, a
+"next game" instruction and two drills. Your sessions that week lean towards it, with at least one focus
+drill per session. With no recent games, the focus comes from your lowest skill ratings. Logged games
+also count towards training load, using your minutes and effort.
+
+**Progress** shows your season numbers (✓ when you're meeting a per-game minimum), the last 3 games
+against the ones before, and every logged match.
+
 ## Adding or editing a drill
 
 Drills live in `src/drills/content/` as plain TypeScript objects, one file per area. Copy an existing drill,
@@ -233,6 +255,7 @@ src/
                       adapt.ts (pain, load, difficulty), usePlan.ts (live data), actions.ts, tests
   session/            session mode logic: run.ts (state machine), device.ts (wake lock, beeps,
                       speech), save.ts; screens in screens/session/
+  focus/              weekly focus from match logs (focus.ts, focus.test.ts)
   hooks/              live data hooks (useProfile, useRatingHistory, useSetting)
   lib/                small helpers: dates, formatting, theme, storage
   styles/             tokens.css (colours, sizes, light/dark) and app.css

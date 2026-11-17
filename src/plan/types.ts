@@ -2,12 +2,14 @@ import type {
   DayOverride,
   DrillState,
   Game,
+  MatchLog,
   PainReport,
   PlannedSession,
   Profile,
   Ratings,
   SessionLog,
   SessionType,
+  SkillKey,
 } from '../db/types';
 import type { AreaRestriction } from './adapt';
 import type { SessionBlock } from '../drills/types';
@@ -71,6 +73,10 @@ export interface PlanInput {
   pain?: PainReport[];
   /** Per-drill difficulty from your ratings. */
   drillStates?: DrillState[];
+  /** Logged matches (training load). */
+  matches?: MatchLog[];
+  /** This week's focus skills: drills on these get a boost. */
+  focusSkills?: SkillKey[];
 }
 
 export interface WeekCounts {

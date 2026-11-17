@@ -147,6 +147,7 @@ export function Stepper({
   max = 99,
   hint,
   unit,
+  step = 1,
 }: {
   label: string;
   value: number;
@@ -155,6 +156,7 @@ export function Stepper({
   max?: number;
   hint?: string;
   unit?: string;
+  step?: number;
 }) {
   return (
     <Field label={label} hint={hint}>
@@ -163,7 +165,7 @@ export function Stepper({
           type="button"
           aria-label={`Decrease ${label}`}
           disabled={value <= min}
-          onClick={() => onChange(Math.max(min, value - 1))}
+          onClick={() => onChange(Math.max(min, value - step))}
         >
           −
         </button>
@@ -175,7 +177,7 @@ export function Stepper({
           type="button"
           aria-label={`Increase ${label}`}
           disabled={value >= max}
-          onClick={() => onChange(Math.min(max, value + 1))}
+          onClick={() => onChange(Math.min(max, value + step))}
         >
           +
         </button>

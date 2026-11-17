@@ -244,14 +244,28 @@ export interface MatchLog {
   id?: number;
   date: ISODate;
   minutes?: number;
+  /** How hard the game was, 1–10 (feeds training load). */
+  rpe?: number;
   goals?: number;
   assists?: number;
+  /** 1v1 take-ons tried and won. */
   dribblesAttempted?: number;
   dribblesWon?: number;
   shots?: number;
   shotsOnTarget?: number;
+  /** Deliberate left-foot actions: passes, crosses, shots. */
   leftFootTouches?: number;
   confidence?: number; // 1–10
+  /** How much of the ball you got. */
+  involvement?: 'lots' | 'some' | 'barely';
+  /** After losing the ball, did you keep asking for it? */
+  keptAsking?: 'yes' | 'mostly' | 'no';
+  wentWell?: string;
+  wentBadly?: string;
+  keyMoments?: string;
+  mental?: string;
+  /** Link to the game recording (e.g. YouTube). */
+  recordingUrl?: string;
   [field: string]: unknown;
 }
 

@@ -12,7 +12,7 @@
  *  - Drill difficulty: "too hard" once → easier next time; "too easy" twice
  *    in a row → harder.
  */
-import type { BodyArea, DrillState, Game, HealthFlag, PainReport, SessionLog, SessionType } from '../db/types';
+import type { BodyArea, DrillState, Game, HealthFlag, MatchLog, PainReport, SessionLog, SessionType } from '../db/types';
 import { describeAreas } from '../drills/personal';
 import { addDays, daysBetween, formatShort, type ISODate } from '../lib/dates';
 import type { DrillRating } from '../session/run';
@@ -94,7 +94,13 @@ const EST_RPE: Record<SessionType, number> = {
 const GAME_MINUTES = 65;
 
 /** Daily training load (effort × minutes), games included. */
-export function dailyLoads(logs: SessionLog[], games: Game[], from: ISODate, to: ISODate): Map<ISODate, number> {
+export function dailyLoads(
+  logs: SessionLog[],
+  games: Game[],
+  from: ISODate,
+  to: ISODate,
+  matches: MatchLog[] = [],
+): Map<ISODate, number> {
   const out = new Map<ISODate, number>();
   for (const l of logs) {
     if (l.date < from || l.date > to || l.status === 'skipped') continue;
@@ -102,9 +108,14 @@ export function dailyLoads(logs: SessionLog[], games: Game[], from: ISODate, to:
     const load = (l.rpe ?? EST_RPE[type]) * (l.minutes ?? 0);
     out.set(l.date, (out.get(l.date) ?? 0) + load);
   }
+  // Logged matches use your minutes and effort; other games are estimated.
+  for (const m of matches) {
+    if (m.date < from || m.date > to) continue;
+    out.set(m.date, (out.get(m.date) ?? 0) + (m.rpe ?? EST_RPE.game) * (m.minutes ?? GAME_MINUTES));
+  }
   for (const g of games) {
     if (g.date < from || g.date > to || (g.status !== 'played' && g.status !== 'planned')) continue;
-    if (logs.some((l) => l.date === g.date && l.sessionType === 'game')) continue; // logged in M5
+    if (matches.some((m) => m.date === g.date)) continue;
     out.set(g.date, (out.get(g.date) ?? 0) + EST_RPE.game * GAME_MINUTES);
   }
   return out;
@@ -118,9 +129,15 @@ export interface LoadCheck {
 }
 
 /** Needs 3 weeks of plan history before it can judge a spike. */
-export function loadCheck(logs: SessionLog[], games: Game[], today: ISODate, planStart: ISODate): LoadCheck {
+export function loadCheck(
+  logs: SessionLog[],
+  games: Game[],
+  today: ISODate,
+  planStart: ISODate,
+  matches: MatchLog[] = [],
+): LoadCheck {
   const yesterday = addDays(today, -1);
-  const loads = dailyLoads(logs, games, addDays(today, -28), yesterday);
+  const loads = dailyLoads(logs, games, addDays(today, -28), yesterday, matches);
   let acute = 0;
   let total = 0;
   for (const [d, v] of loads) {

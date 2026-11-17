@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FocusCard } from '../components/FocusCard';
 import { KindBadge, SWAP_LABEL, SessionView } from '../components/SessionView';
 import { toast } from '../components/Toast';
 import { NoProfile } from './profile/NoProfile';
@@ -134,6 +135,7 @@ export function Plan() {
       </p>
       <div className="stack">
         <WeekCard week={plan.week} />
+        <FocusCard focus={plan.focus} ratings={plan.input.ratings} compact />
         <ul className="days">
           {plan.days.map((d) => (
             <DayRow

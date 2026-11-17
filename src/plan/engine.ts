@@ -188,7 +188,7 @@ export function planDays(input: PlanInput, days = 7, opts: PlanOptions = {}): Da
   const withBlocks = opts.withBlocks ?? true;
   const pain = input.pain ?? [];
   const levels = new Map((input.drillStates ?? []).map((s) => [s.drillId, s.level]));
-  const load = loadCheck(input.logs, input.games, today, input.planStart);
+  const load = loadCheck(input.logs, input.games, today, input.planStart, input.matches ?? []);
   const gameDates = new Set(
     input.games.filter((g) => g.status === 'planned' || g.status === 'played').map((g) => g.date),
   );
@@ -304,6 +304,7 @@ export function planDays(input: PlanInput, days = 7, opts: PlanOptions = {}): Da
             avoid: lastDrills.get(kind),
             blockedAreas: new Set(restrictions.map((x) => x.area)),
             levels,
+            focusSkills: input.focusSkills,
           });
     if (blocks.length) {
       const ids = blocks.flatMap((b) => b.items.map((i) => i.drillId));

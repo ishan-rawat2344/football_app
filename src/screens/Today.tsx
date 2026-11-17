@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
+import { FocusCard } from '../components/FocusCard';
 import { KindBadge, SWAP_LABEL, SessionView } from '../components/SessionView';
 import { toast } from '../components/Toast';
 import { db } from '../db/db';
-import type { BodyArea, HealthFlag, PainReport, SessionType } from '../db/types';
+import type { BodyArea, Game, HealthFlag, MatchLog, PainReport, SessionType } from '../db/types';
 import { describeAreas } from '../drills/personal';
 import { describeRestriction, type AreaRestriction } from '../plan/adapt';
 import type { RunState } from '../session/run';
@@ -25,7 +26,6 @@ const BACKUP_EVERY_DAYS = 7;
 const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 const ROADMAP = [
-  { label: 'Match log and weekly focus', milestone: 'M5' },
   { label: 'Tests, charts and personal bests', milestone: 'M6' },
   { label: 'Mentality coach', milestone: 'M7' },
   { label: 'YouTube tutorials', milestone: 'M8' },
@@ -198,9 +198,12 @@ function TodaySession({ day, activeRun }: { day: DayPlan; activeRun: RunState | 
       )}
 
       {day.kind === 'game' && (
-        <div className="row" style={{ marginTop: 16 }}>
+        <div className="row" style={{ marginTop: 16, gridTemplateColumns: '1fr 2fr' }}>
           <button className="btn btn--secondary" disabled={busy} onClick={() => run(() => setGame(day.date, 'cancelled'), 'Game removed: plan updated')}>
-            Game cancelled
+            Cancelled
+          </button>
+          <button className="btn btn--primary" disabled={busy} onClick={() => navigate(`/match/new/${day.date}`)}>
+            Log your match
           </button>
         </div>
       )}
@@ -295,6 +298,27 @@ function MorningCheck({ today, pain }: { today: string; pain: PainReport[] }) {
   );
 }
 
+/** A game in the last few days with no match log yet. */
+function LogMatchPrompt({ today, games, matches }: { today: string; games: Game[]; matches: MatchLog[] }) {
+  const pending = games
+    .filter((g) => (g.status === 'planned' || g.status === 'played') && g.date < today && g.date >= addDays(today, -3))
+    .filter((g) => !matches.some((m) => m.date === g.date))
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+  if (!pending) return null;
+  return (
+    <section className="card">
+      <p className="card__eyebrow">Your last game</p>
+      <h2 className="card__title">How did {formatShort(pending.date)} go?</h2>
+      <p className="card__body" style={{ marginBottom: 16 }}>
+        30 seconds of numbers sets next week's focus. Fill in details from the recording later.
+      </p>
+      <Link href={`/match/new/${pending.date}`} className="btn btn--primary btn--block">
+        Log the match
+      </Link>
+    </section>
+  );
+}
+
 function StreakPill({ streak }: { streak: Streak }) {
   if (!streak.current && !streak.best) return null;
   return (
@@ -376,7 +400,11 @@ export function Today() {
 
         {day && <ProtectingCard restrictions={day.restrictions} />}
 
+        {plan && <LogMatchPrompt today={today} games={plan.input.games} matches={plan.input.matches ?? []} />}
+
         {day && <TodaySession day={day} activeRun={activeRun} />}
+
+        {plan && <FocusCard focus={plan.focus} ratings={plan.input.ratings} />}
 
         {plan && <GamesCard today={today} days={plan.days} />}
 

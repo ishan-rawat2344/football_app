@@ -389,3 +389,22 @@ describe('streak', () => {
     expect(computeStreak(input({ today: MON, planStart: MON }))).toEqual({ current: 0, best: 0 });
   });
 });
+
+describe('weekly focus in the plan', () => {
+  it('a focus on off-ball movement puts movement drills into ground sessions', () => {
+    // Rated 8/10, so without the focus the plan has no reason to favour movement.
+    const ratings = { weakFoot: 2, firstTouch: 4, decisionMaking: 4, confidence: 4, offBallMovement: 8 };
+    const without = upcoming(planDays(input({ ratings }), 14)).filter((d) => d.kind === 'groundHard');
+    const withFocus = upcoming(planDays(input({ ratings, focusSkills: ['offBallMovement'] }), 14)).filter((d) => d.kind === 'groundHard');
+    const movementCount = (days: DayPlan[]) =>
+      days.flatMap(drillIds).filter((id) => getDrill(id)!.skills.includes('offBallMovement')).length;
+    expect(movementCount(withFocus)).toBeGreaterThan(movementCount(without));
+    for (const d of withFocus) expect(drillIds(d).some((id) => getDrill(id)!.skills.includes('offBallMovement')), d.date).toBe(true);
+  });
+
+  it('a logged match counts in training load with your minutes and effort', async () => {
+    const { dailyLoads } = await import('./adapt');
+    const loads = dailyLoads([], [{ date: MON, status: 'played' }], MON, MON, [{ date: MON, minutes: 60, rpe: 9 }]);
+    expect(loads.get(MON)).toBe(540);
+  });
+});

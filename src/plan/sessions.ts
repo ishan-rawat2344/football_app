@@ -5,7 +5,7 @@
  * between days so you don't do the same drills every time, favour your
  * weakest skills, and respect your health notes.
  */
-import type { BodyArea, HealthFlag, Profile, Ratings, SessionType } from '../db/types';
+import type { BodyArea, HealthFlag, Profile, Ratings, SessionType, SkillKey } from '../db/types';
 import { DRILLS, getDrill } from '../drills/library';
 import { describeAreas, healthWarnings, priorityScore } from '../drills/personal';
 import { LOAD_TAG_AREAS, type Drill, type DrillCategory } from '../drills/types';
@@ -24,7 +24,12 @@ export interface SessionContext {
   blockedAreas?: Set<BodyArea>;
   /** Your difficulty level per drill, from your ratings. */
   levels?: Map<string, -1 | 0 | 1>;
+  /** This week's focus: drills training these skills get a boost. */
+  focusSkills?: SkillKey[];
 }
+
+/** Bonus for each focus skill a drill trains (up to two). */
+const FOCUS_BONUS = 5;
 
 const loadsBlocked = (d: Drill, blocked?: Set<BodyArea>) =>
   !!blocked?.size && d.loadTags.some((t) => LOAD_TAG_AREAS[t].some((a) => blocked.has(a)));
@@ -92,6 +97,8 @@ interface PickRule {
   noCutting?: boolean;
   maxIntensity?: Drill['intensity'];
   exclude?: (d: Drill) => boolean;
+  /** Only pick a drill on this week's focus skills, if any fit. */
+  requireFocus?: boolean;
 }
 
 const INTENSITY_RANK = { low: 0, medium: 1, high: 2 } as const;
@@ -116,15 +123,20 @@ function candidates(rule: PickRule, ctx: SessionContext): Drill[] {
  * Pick one drill: rank by how much it helps your weakest skills (plus a bonus
  * for protecting a flagged area), then rotate through the top 3 by day.
  */
+const hitsFocus = (d: Drill, ctx: SessionContext) => !!ctx.focusSkills?.some((s) => d.skills.includes(s));
+
 function pick(rule: PickRule, ctx: SessionContext, slot: number, used: Set<string>): Drill | undefined {
   const flags = ctx.profile.health;
-  const ranked = candidates(rule, ctx)
-    .filter((d) => !used.has(d.id))
+  let pool = candidates(rule, ctx).filter((d) => !used.has(d.id));
+  if (rule.requireFocus && pool.some((d) => hitsFocus(d, ctx))) pool = pool.filter((d) => hitsFocus(d, ctx));
+  const ranked = pool
     .map((d, i) => {
       const gate = healthGate(d, flags);
+      const focusHits = ctx.focusSkills ? d.skills.filter((s) => ctx.focusSkills!.includes(s)).length : 0;
       const score =
         priorityScore(d, ctx.ratings) +
-        (protectsFlaggedArea(d, flags) ? 8 : 0) -
+        (protectsFlaggedArea(d, flags) ? 8 : 0) +
+        Math.min(2, focusHits) * FOCUS_BONUS -
         (gate.level === -1 ? 4 : 0);
       return { d, i, score };
     })
@@ -194,8 +206,12 @@ export function buildSession(type: SessionType, ctx: SessionContext): PlannedBlo
   const used = new Set<string>();
   const light = ctx.lightWeek ? LIGHT : 1;
   const lightNote = ctx.lightWeek ? LIGHT_NOTE : undefined;
+  // Every session gets at least one drill on this week's focus: the first
+  // slot that can hold one must use one.
+  let focusDone = !ctx.focusSkills?.length;
   const take = (rule: PickRule, slot: number, factor = 1, note?: string) => {
-    const d = pick(rule, ctx, slot, used);
+    const d = pick({ ...rule, requireFocus: !focusDone }, ctx, slot, used);
+    if (d && hitsFocus(d, ctx)) focusDone = true;
     return d ? item(d, ctx, factor, note) : undefined;
   };
 

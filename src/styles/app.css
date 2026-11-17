@@ -1819,3 +1819,155 @@ h3 {
   min-height: 60px;
   font-size: var(--fs-lg);
 }
+
+/* ======================= M5: matches and focus ======================= */
+
+.focus__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-size: var(--fs-lg);
+  font-weight: 800;
+}
+
+.focus__n {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--fs-sm);
+}
+
+.focus__why,
+.focus__tip {
+  margin: 0 0 8px 36px;
+  font-size: var(--fs-sm);
+}
+
+.focus__why {
+  color: var(--text-muted);
+}
+
+.focus .chips {
+  margin-left: 36px;
+}
+
+.chip--link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.wins {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-sm);
+  color: var(--success);
+  font-weight: 600;
+}
+
+.wins li::before {
+  content: '✓ ';
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stat__value {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__mark {
+  margin-left: 4px;
+  font-size: var(--fs-sm);
+  vertical-align: super;
+}
+
+.stat__mark--ok {
+  color: var(--success);
+}
+
+.stat__mark--no {
+  color: var(--text-muted);
+}
+
+.stat__label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.stat__sub {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.match-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.match-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.match-row {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 56px;
+  text-decoration: none;
+}
+
+.match-row__date {
+  font-weight: 800;
+  font-size: var(--fs-sm);
+}
+
+.match-row__main {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--fs-sm);
+}
+
+/* Two steppers side by side, even on a narrow phone. */
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.pair .stepper {
+  grid-template-columns: 44px 1fr 44px;
+  width: 100%;
+}
+
+.pair .stepper output {
+  min-width: 0;
+}
