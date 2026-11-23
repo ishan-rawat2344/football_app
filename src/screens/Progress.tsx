@@ -61,7 +61,7 @@ function Season({ matches, targets }: { matches: MatchLog[]; targets: { dribbleA
   );
 }
 
-function FilmCard({ matches }: { matches: MatchLog[] }) {
+function FilmCard({ matches, today }: { matches: MatchLog[]; today: string }) {
   const counts = useLiveQuery(
     async () => {
       const map = new Map<number, number>();
@@ -71,6 +71,20 @@ function FilmCard({ matches }: { matches: MatchLog[] }) {
     [],
     new Map<number, number>(),
   );
+  if (!matches.length) {
+    return (
+      <section className="card">
+        <p className="card__eyebrow">Film room</p>
+        <p className="card__body" style={{ marginBottom: 12 }}>
+          Watch a game's video, tag your moments, and find your patterns. Start by logging the match and pasting its
+          YouTube link at the bottom of the form. You can fill in the numbers later from your tags.
+        </p>
+        <Link href={`/match/new/${today}`} className="btn btn--secondary btn--block">
+          Log a match and add its video
+        </Link>
+      </section>
+    );
+  }
   return (
     <section className="card">
       <p className="card__eyebrow">Film room</p>
@@ -136,7 +150,7 @@ export function Progress() {
           Log a match
         </Link>
 
-        {matches.length > 0 && <FilmCard matches={matches} />}
+        <FilmCard matches={matches} today={today} />
 
         <TestsCard results={results} today={today} />
 

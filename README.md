@@ -360,8 +360,9 @@ How it works and what it costs:
 
 ## Film room (match video review)
 
-Open it from **Progress → Film room**, or from any match (**Open in the Film room**). It needs the match's
-YouTube link; paste it there if the match doesn't have one yet.
+Open it from **Progress → Film room**, or from any match (**Open in the Film room**). It works on a logged
+match with its YouTube link: if you haven't logged the game yet, log it first and paste the link at the bottom
+of the form (the numbers can be filled in later from your tags).
 
 1. **Mark kick-off.** Play the video and tap **Kick-off now** when the game starts, so tags show the match
    minute.
