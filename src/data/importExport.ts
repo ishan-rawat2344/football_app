@@ -32,6 +32,7 @@ export const BACKUP_TABLES = [
   'channelPrefs',
   'lessonProgress',
   'settings',
+  'filmTags',
 ] as const;
 export type BackupTable = (typeof BACKUP_TABLES)[number];
 export type BackupTables = Record<BackupTable, Record<string, unknown>[]>;
@@ -54,6 +55,7 @@ const PRIMARY_KEY: Record<BackupTable, string | null> = {
   channelPrefs: 'channelId',
   lessonProgress: 'lessonId',
   settings: 'key',
+  filmTags: 'matchId',
 };
 
 export interface BackupFile {

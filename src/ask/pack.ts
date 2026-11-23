@@ -5,7 +5,10 @@
  *
  * Pure, so it's tested. Personal details only come from your on-phone data.
  */
-import type { MatchLog, PainReport, Profile, RatingSnapshot, SessionLog, TestResult } from '../db/types';
+import type { FilmTag, MatchLog, PainReport, Profile, RatingSnapshot, SessionLog, TestResult } from '../db/types';
+import { patterns } from '../film/analysis';
+import { clock, matchMinute } from '../film/link';
+import { findReason, getTag } from '../film/tags';
 import { getDrill } from '../drills/library';
 import type { FocusResult } from '../focus/focus';
 import { addDays, formatShort, type ISODate } from '../lib/dates';
@@ -74,6 +77,8 @@ export interface PackData {
   days?: DayPlan[];
   restrictions?: AreaRestriction[];
   loads?: WeekLoad[];
+  /** Film room tags for these matches. */
+  film?: FilmTag[];
 }
 
 const INTRO =
@@ -273,12 +278,35 @@ function games(d: PackData, topic: Topic): string {
           m.mental ? `  - Mentally: ${m.mental}` : '',
         ].filter(Boolean)
       : [];
-    return [`- ${formatShort(m.date)}: ${list(stats)}`, ...detail].join('\n');
+    const film = i === 0 || topic === 'game' ? filmLines(m, d.film ?? []) : [];
+    return [`- ${formatShort(m.date)}: ${list(stats)}`, ...detail, ...film].join('\n');
   });
   rows.push(
     `- My per-game targets: at least ${t.dribbleAttemptsMin} 1v1 attempts (aiming for ${t.dribbleAttemptsTarget}), at least ${t.leftFootPassesMin} weak-foot actions`,
   );
   return block('Recent games, newest first (stats I count from the recording)', rows);
+}
+
+/** The moments you tagged in the Film room, in match order. */
+function filmLines(m: MatchLog, all: FilmTag[]): string[] {
+  const tags = all.filter((t) => t.matchId === m.id).sort((a, b) => a.t - b.t);
+  if (!tags.length) return [];
+  const MAX = 40;
+  const lines = tags.slice(0, MAX).map((t) => {
+    const def = getTag(t.kind);
+    const outcome = def.outcomes?.find((o) => o.key === t.outcome)?.label.toLowerCase();
+    const why = (t.reasons ?? []).map((k) => findReason(t.kind, k)?.label.toLowerCase()).filter(Boolean);
+    const when = m.filmKickoff !== undefined ? `${matchMinute(t.t, m.filmKickoff)} (video ${clock(t.t)})` : `video ${clock(t.t)}`;
+    const what = [def.label + (outcome ? `: ${outcome}` : ''), why.length ? `because: ${why.join(', ')}` : ''].filter(Boolean).join(', ');
+    return `    - ${when}: ${what}${t.note ? `. My note: "${t.note}"` : ''}`;
+  });
+  if (tags.length > MAX) lines.push(`    - …and ${tags.length - MAX} more`);
+  const pats = patterns(tags).slice(0, 3).map((p) => `    - Pattern: ${p.text}`);
+  return [
+    `  - Film room: ${tags.length} moments I tagged while re-watching${m.recordingUrl ? ` (video: ${m.recordingUrl})` : ''}`,
+    ...lines,
+    ...pats,
+  ];
 }
 
 function tests(d: PackData): string {

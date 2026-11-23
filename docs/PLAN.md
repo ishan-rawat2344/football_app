@@ -109,3 +109,10 @@ device. `.env` is for local development only. Personal data never goes in the re
 | M7 | Mentality coach |
 | M8 | YouTube |
 | M9 | Ask Claude, polish, final README |
+
+## After version 1
+
+| Version | Added |
+|---|---|
+| 1.1 | Step-by-step drill diagrams for the 41 drills where the layout matters (body exercises keep their videos) |
+| 1.2 (M10) | Film room: watch a match video in the app (YouTube's embedded player), tag your moments, review them with reasons and a checklist, fill the match log from tags, find patterns, and feed weekly focus and Ask Claude. No automatic tracking: the app reads the video's time, never the picture |

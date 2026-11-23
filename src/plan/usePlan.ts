@@ -40,7 +40,7 @@ export function usePlan(days = 7): PlanState | null | 'loading' {
       const profile = await db.profile.get('me');
       if (!profile) return null;
       const from = addDays(today, -21);
-      const [ratings, games, logs, overrides, planStart, pain, drillStates, matches] = await Promise.all([
+      const [ratings, games, logs, overrides, planStart, pain, drillStates, matches, filmTags] = await Promise.all([
         db.ratingSnapshots.orderBy('date').last(),
         db.games.toArray(),
         // 90 days for the streak and the 4-week load check
@@ -50,6 +50,7 @@ export function usePlan(days = 7): PlanState | null | 'loading' {
         db.painReports.where('date').aboveOrEqual(from).toArray(),
         db.drillState.toArray(),
         db.matchLogs.where('date').aboveOrEqual(addDays(today, -60)).toArray(),
+        db.filmTags.toArray(),
       ]);
       return {
         profile,
@@ -61,6 +62,7 @@ export function usePlan(days = 7): PlanState | null | 'loading' {
         pain,
         drillStates,
         matches,
+        filmTags,
       };
     },
     [today],
@@ -74,7 +76,7 @@ export function usePlan(days = 7): PlanState | null | 'loading' {
 
   return useMemo(() => {
     if (data === 'loading' || data === null) return data;
-    const focus = weeklyFocus({ matches: data.matches, profile: data.profile, ratings: data.ratings, today });
+    const focus = weeklyFocus({ matches: data.matches, profile: data.profile, ratings: data.ratings, today, filmTags: data.filmTags });
     const input: PlanInput = { ...data, planStart: data.planStart ?? today, today, focusSkills: focusSkills(focus) };
     const all = planDays(input, days);
     const yesterday = all.find((d) => d.date === addDays(today, -1));

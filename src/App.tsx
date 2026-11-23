@@ -9,6 +9,7 @@ import { AskClaude } from './screens/AskClaude';
 import { DataScreen } from './screens/DataScreen';
 import { DiagramGallery } from './screens/DiagramGallery';
 import { DrillDetail } from './screens/DrillDetail';
+import { FilmRoom } from './screens/FilmRoom';
 import { SessionMode } from './screens/session/SessionMode';
 import { Drills } from './screens/Drills';
 import { MatchForm } from './screens/MatchForm';
@@ -72,6 +73,17 @@ function Header() {
 /** Session mode takes the whole screen: no header or tab bar. */
 function Shell() {
   const [location] = useLocation();
+  if (location.startsWith('/film/')) {
+    // The Film room too: room for the video, and it works with the phone on its side.
+    return (
+      <div className="app app--full app--film">
+        <ScrollToTop />
+        <main className="film-main">
+          <Route path="/film/:id" component={FilmRoom} />
+        </main>
+      </div>
+    );
+  }
   if (location.startsWith('/session/') || location === '/mind/visualise') {
     return (
       <div className="app app--full">

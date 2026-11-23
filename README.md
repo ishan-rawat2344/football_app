@@ -4,7 +4,7 @@ A personal football coach for a left winger. It plans training around your games
 pitch, tracks progress, and coaches the mental side. It's a **PWA (Progressive Web App)**: a website that
 installs on your iPhone's home screen, works offline, and keeps all its data **on your phone**.
 
-> **Status: version 1.1.** All ten planned milestones are done, plus step-by-step drill diagrams. [docs/PLAN.md](docs/PLAN.md) has the
+> **Status: version 1.2.** All ten planned milestones are done, plus step-by-step drill diagrams and the Film room. [docs/PLAN.md](docs/PLAN.md) has the
 > original plan, and **Ideas for later** at the end of this file lists what could come next.
 
 ### What it does
@@ -16,6 +16,7 @@ installs on your iPhone's home screen, works offline, and keeps all its data **o
 | **Drills** | 54 drills written like a coach's session plan, sorted by your weakest skills, with step-by-step diagrams and tutorial videos |
 | **Session mode** | Big buttons and timers for the pitch, a spoken cue caller, a readiness check, pain logging, and effort and difficulty ratings |
 | **Progress** | Match log, solo tests, personal bests, charts against your targets, and training load |
+| **Film room** | Watch a match video in the app, tag your moments, review them with a coach's checklist, and find your patterns |
 | **Mind** | Pre-match routine, the reset after a mistake, visualisation, 10 short lessons, your cue words |
 | **Videos** | YouTube tutorials for this week's focus, ranked by what you find helpful |
 | **Ask Claude** | Copies a summary of your data to paste into Claude for a free second opinion |
@@ -357,6 +358,40 @@ How it works and what it costs:
 - **Paid version (option B), not built:** a chat inside the app would need a Claude API key and is billed
   per message. That's why option A was chosen.
 
+## Film room (match video review)
+
+Open it from **Progress → Film room**, or from any match (**Open in the Film room**). It needs the match's
+YouTube link; paste it there if the match doesn't have one yet.
+
+1. **Mark kick-off.** Play the video and tap **Kick-off now** when the game starts, so tags show the match
+   minute.
+2. **Tag.** Tap a button the moment something happens. It saves the time in the video. On the ball: 1v1,
+   Shot, Left-foot action, Cross or cutback, Lost the ball, Played it safe. Off the ball: Run, Showed again,
+   Went quiet, Tracking back, Press, Moment. For 1v1s, shots and similar, the result choices (won, lost, on
+   target…) show for the last tag; skip them if you're busy. **Undo** removes the last tag.
+3. **Review.** Each tag jumps the video to 5 seconds before it. Pick the result and why it happened (for
+   example "Didn't scan" or "Slowed down before the move"), read the 3-point "what to look for", and add a
+   note. Reasons link to the drill or lesson that fixes them. A dot marks tags that still need a result.
+4. **Summary.** Counts, and your match log next to the numbers from your tags. **Use these numbers** copies
+   them into the log (only for things you tagged; untagged ones are left alone). It also shows patterns, such as
+   "3 of 4 times you lost the ball: didn't scan", for this game and across your last 3 reviewed games.
+
+What it feeds:
+
+- **Weekly focus:** a problem that comes up 3 or more times across your recent reviewed games can become one
+  of the week's two focus areas, and your plan leans towards its drills.
+- **Ask Claude:** the "My last game" summary includes your tagged moments (minute, result, reasons, notes).
+  Claude can't watch the video, so add 2–3 phone screenshots of key moments for comments on positioning.
+
+Good to know:
+
+- It uses YouTube's own embedded player (free, no key, no search allowance used). The app reads the video's
+  time, never the picture, and nothing is uploaded. Tags are stored on your phone and included in backups.
+- Hold the phone upright (video on top, buttons below) or turn it on its side (video left, buttons right).
+- If a video won't play in the app (private, deleted, or the uploader blocks it), watch it in the YouTube app
+  and type the video time (e.g. `23:15`) above the buttons; tagging works the same.
+- Tag at 1.5× speed and only your own involvements: about 20–30 minutes a game.
+
 ## Drill diagrams
 
 41 drills have a top-down diagram on their page, above "Why you're doing this". These are the drills where
@@ -406,6 +441,8 @@ src/
   videos/             YouTube: youtube.ts (API calls), rank.ts (filters and ranking), store.ts (cache,
                       daily search count, save/like/hide), queries.ts (focus-area searches), tests
   ask/                Ask Claude: pack.ts builds the summary you paste into Claude (pack.test.ts)
+  film/               Film room: tags.ts (buttons, results, reasons, fixes), analysis.ts (stats,
+                      patterns, focus), link.ts (YouTube links, times), player.ts (YouTube player)
   drills/diagrams/    drill diagrams: types.ts, geometry.ts (positions, curves, wavy dribbles),
                       content/ (one file per group); drawn by components/DrillDiagram.tsx
   mind/               lessons.ts, routine.ts (bedtime, checklists, reset word, visualisation script)
@@ -467,6 +504,8 @@ Where the key lives:
 These are not built. They were parked in the plan:
 
 - An in-app Claude chat (option B: paid API, needs a key)
+- Automatic tracking and a heatmap from a match video file (a laptop tool; needs the video file and large
+  downloads)
 - Summer and monsoon modes (heat, wet pitches)
 - A gym programme
 - More heading work

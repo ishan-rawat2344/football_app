@@ -61,6 +61,42 @@ function Season({ matches, targets }: { matches: MatchLog[]; targets: { dribbleA
   );
 }
 
+function FilmCard({ matches }: { matches: MatchLog[] }) {
+  const counts = useLiveQuery(
+    async () => {
+      const map = new Map<number, number>();
+      for (const t of await db.filmTags.toArray()) map.set(t.matchId, (map.get(t.matchId) ?? 0) + 1);
+      return map;
+    },
+    [],
+    new Map<number, number>(),
+  );
+  return (
+    <section className="card">
+      <p className="card__eyebrow">Film room</p>
+      <p className="card__body" style={{ marginBottom: 8 }}>
+        Watch a game, tag your moments, and find your patterns.
+      </p>
+      <ul className="list">
+        {matches.slice(0, 3).map((m) => {
+          const n = counts.get(m.id!) ?? 0;
+          const status = m.filmReviewedAt ? 'reviewed' : n ? `${n} tag${n === 1 ? '' : 's'}` : m.recordingUrl ? 'video added' : 'no video yet';
+          return (
+            <li key={m.id}>
+              <span>
+                {formatShort(m.date)} <span className="muted">· {status}</span>
+              </span>
+              <Link href={`/film/${m.id}`} className="btn btn--small btn--secondary">
+                {n && !m.filmReviewedAt ? 'Continue' : 'Open'}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function MatchRow({ m }: { m: MatchLog }) {
   const ga = [m.goals ? `${m.goals} G` : '', m.assists ? `${m.assists} A` : ''].filter(Boolean).join(' · ') || 'No G/A';
   return (
@@ -99,6 +135,8 @@ export function Progress() {
         <Link href={`/match/new/${today}`} className="btn btn--primary btn--block btn--lg">
           Log a match
         </Link>
+
+        {matches.length > 0 && <FilmCard matches={matches} />}
 
         <TestsCard results={results} today={today} />
 

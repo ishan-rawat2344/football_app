@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'wouter';
+import { Link, useLocation, useParams } from 'wouter';
 import { BackLink, Stepper, TextArea, TextInput } from '../components/forms';
 import { toast } from '../components/Toast';
 import { db } from '../db/db';
@@ -122,7 +122,10 @@ export function MatchForm() {
 
   async function remove() {
     if (editingId === null || !window.confirm('Delete this match log?')) return;
-    await db.matchLogs.delete(editingId);
+    await db.transaction('rw', db.matchLogs, db.filmTags, async () => {
+      await db.matchLogs.delete(editingId);
+      await db.filmTags.where('matchId').equals(editingId).delete();
+    });
     toast('Match deleted');
     navigate('/progress');
   }
@@ -219,6 +222,18 @@ export function MatchForm() {
             </a>
           )}
         </section>
+
+        {editingId !== null && (
+          <section className="card">
+            <p className="card__eyebrow">Film room</p>
+            <p className="card__body" style={{ marginBottom: 12 }}>
+              Watch the video here, tag your moments, then review them. Your tags can fill in the numbers above.
+            </p>
+            <Link href={`/film/${editingId}`} className="btn btn--primary btn--block">
+              Open in the Film room
+            </Link>
+          </section>
+        )}
 
         {editingId !== null && (
           <button className="btn btn--ghost btn--danger-text btn--block" onClick={remove}>

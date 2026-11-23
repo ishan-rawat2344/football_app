@@ -5,7 +5,7 @@
 import type { SkillKey } from '../db/types';
 import type { FocusArea, FocusKey } from '../focus/focus';
 
-const FOCUS_QUERIES: Record<Exclude<FocusKey, 'rating'>, string[]> = {
+const FOCUS_QUERIES: Record<Exclude<FocusKey, 'rating' | 'film'>, string[]> = {
   attempts: ['how to beat a full back 1v1 winger', 'winger 1v1 attacking tutorial'],
   dribbleSuccess: ['best 1v1 moves for wingers tutorial', 'how to dribble past a defender tutorial'],
   leftFoot: ['how to improve weak foot football drills', 'weak foot passing and shooting drills'],
@@ -34,6 +34,6 @@ const SKILL_QUERIES: Record<SkillKey, string[]> = {
 };
 
 export function focusQueries(area: FocusArea): string[] {
-  if (area.key !== 'rating') return FOCUS_QUERIES[area.key];
+  if (area.key !== 'rating' && area.key !== 'film') return FOCUS_QUERIES[area.key];
   return area.skills.flatMap((s) => SKILL_QUERIES[s]).slice(0, 3);
 }

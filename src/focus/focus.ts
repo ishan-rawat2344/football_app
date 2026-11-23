@@ -6,7 +6,8 @@
  * With no recent games it falls back to your lowest skill ratings.
  * The plan then gives drills on those skills a boost.
  */
-import type { MatchLog, Profile, Ratings, SkillKey } from '../db/types';
+import type { FilmTag, MatchLog, Profile, Ratings, SkillKey } from '../db/types';
+import { filmFocusAreas } from '../film/analysis';
 import type { DrillCategory } from '../drills/types';
 import { addDays, type ISODate } from '../lib/dates';
 import { ALL_SKILLS } from '../profile/meta';
@@ -20,7 +21,9 @@ export type FocusKey =
   | 'dribbleSuccess'
   | 'afterLoss'
   | 'confidence'
-  | 'rating';
+  | 'rating'
+  /** A problem that keeps coming up in the Film room. */
+  | 'film';
 
 export interface FocusArea {
   key: FocusKey;
@@ -218,12 +221,16 @@ export function weeklyFocus(args: {
   profile: Profile;
   ratings: Ratings;
   today: ISODate;
+  /** Film room tags; those from the recent games count. */
+  filmTags?: FilmTag[];
 }): FocusResult {
   const recent = recentMatches(args.matches, args.today);
   if (!recent.length) {
     return { areas: fromRatings(args.ratings), wins: [], basedOn: 'ratings', matchCount: 0 };
   }
   const { areas, wins } = fromMatches(averages(recent), args.profile);
+  const recentIds = new Set(recent.map((m) => m.id));
+  areas.push(...filmFocusAreas((args.filmTags ?? []).filter((t) => recentIds.has(t.matchId))));
   return {
     // The two biggest gaps, never two on the same skill set.
     areas: areas

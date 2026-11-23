@@ -44,7 +44,8 @@ export function AskClaude() {
         db.matchLogs.orderBy('date').reverse().limit(5).toArray(),
         db.testResults.toArray(),
       ]);
-      return { ratings, logs, pain, matches, tests };
+      const film = await db.filmTags.where('matchId').anyOf(matches.map((m) => m.id!)).toArray();
+      return { ratings, logs, pain, matches, tests, film };
     },
     [today],
     null,

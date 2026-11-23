@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie';
 import type {
   ChannelPref,
   DrillState,
+  FilmTag,
   Game,
   LessonProgress,
   MatchLog,
@@ -41,6 +42,7 @@ export class TouchlineDB extends Dexie {
   channelPrefs!: EntityTable<ChannelPref, 'channelId'>;
   lessonProgress!: EntityTable<LessonProgress, 'lessonId'>;
   settings!: EntityTable<SettingRecord, 'key'>;
+  filmTags!: EntityTable<FilmTag, 'id'>;
 
   constructor() {
     super('touchline');
@@ -60,6 +62,10 @@ export class TouchlineDB extends Dexie {
       channelPrefs: 'channelId',
       lessonProgress: 'lessonId',
       settings: 'key',
+    });
+    // v1.2: Film room tags. Existing data is untouched.
+    this.version(2).stores({
+      filmTags: '++id, matchId, [matchId+t]',
     });
   }
 }

@@ -95,3 +95,22 @@ describe('Ask Claude pack', () => {
     }
   });
 });
+
+describe('Ask Claude pack: Film room', () => {
+  it('lists the tagged moments of the latest game with minutes, results, reasons and notes', () => {
+    const d = data();
+    d.matches[0] = { ...d.matches[0]!, id: 7, filmKickoff: 60, recordingUrl: 'https://youtu.be/dQw4w9WgXcQ' };
+    d.film = [
+      { matchId: 7, t: 660, kind: 'lost', reasons: ['noScan'], createdAt: '' },
+      { matchId: 7, t: 300, kind: 'oneVOne', outcome: 'lost', reasons: ['slowed'], note: 'should have gone outside', createdAt: '' },
+      { matchId: 7, t: 900, kind: 'lost', reasons: ['noScan'], createdAt: '' },
+      { matchId: 99, t: 10, kind: 'shot', createdAt: '' },
+    ];
+    const text = buildPack(d, { topic: 'game', include: ALL });
+    expect(text).toContain('Film room: 3 moments I tagged');
+    expect(text).toContain("5' (video 5:00): 1v1: lost, because: slowed down before the move. My note: \"should have gone outside\"");
+    expect(text).toContain("Pattern: 2 of 2 times you lost the ball: didn't scan");
+    expect(text.indexOf("5' (video")).toBeLessThan(text.indexOf("11' (video"));
+    expect(text).not.toContain('video 0:10');
+  });
+});

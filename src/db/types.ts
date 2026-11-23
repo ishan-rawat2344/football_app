@@ -266,7 +266,40 @@ export interface MatchLog {
   mental?: string;
   /** Link to the game recording (e.g. YouTube). */
   recordingUrl?: string;
+  /** Film room: where kick-off is in the video (seconds). */
+  filmKickoff?: number;
+  /** Film room: when you finished reviewing this game. */
+  filmReviewedAt?: string;
   [field: string]: unknown;
+}
+
+/** Film room: one moment you tagged in a match video. */
+export type FilmTagKind =
+  | 'oneVOne'
+  | 'shot'
+  | 'leftFoot'
+  | 'cross'
+  | 'lost'
+  | 'safe'
+  | 'run'
+  | 'showed'
+  | 'quiet'
+  | 'trackBack'
+  | 'press'
+  | 'moment';
+
+export interface FilmTag {
+  id?: number;
+  matchId: number;
+  /** Seconds into the video. */
+  t: number;
+  kind: FilmTagKind;
+  /** e.g. "won", "goal", "late". Set when tagging or in review. */
+  outcome?: string;
+  /** What caused it, from the review list. */
+  reasons?: string[];
+  note?: string;
+  createdAt: string;
 }
 
 export interface TestResult {
